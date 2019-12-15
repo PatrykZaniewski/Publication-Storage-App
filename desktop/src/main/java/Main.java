@@ -9,10 +9,10 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("/FXML/login.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("FXML/login.fxml"));
         primaryStage.setTitle("Publication Storage");
         primaryStage.setScene(new Scene(root, 300, 175));
-        Image icon = new Image("/Icons/icon.png");
+        Image icon = new Image("Icons/icon.png");
         primaryStage.getIcons().add(icon);
         primaryStage.setResizable(false);
         primaryStage.show();
