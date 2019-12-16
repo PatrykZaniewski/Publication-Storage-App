@@ -15,7 +15,6 @@ public class RedisHandler {
     {
         try {
             redisHandler = new Jedis(url, port);
-            System.out.println("XDDD");
         }
         catch (JedisException e)
         {
@@ -43,6 +42,11 @@ public class RedisHandler {
         {
             return -1;
         }
+    }
+
+    public void deleteRedisRecord(String login)
+    {
+        redisHandler.hdel("DesktopLoginLogged", login);
     }
 
     private void createRedisRecord(String login)

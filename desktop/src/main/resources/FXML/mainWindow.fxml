@@ -7,12 +7,12 @@
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller.MainWindowController">
    <children>
-      <MenuBar prefHeight="25.0" prefWidth="600.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <MenuBar fx:id="MenuBar" prefHeight="25.0" prefWidth="600.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <menus>
           <Menu mnemonicParsing="false" text="Opcje">
             <items>
-              <MenuItem mnemonicParsing="false" text="Wyloguj" />
-                  <MenuItem mnemonicParsing="false" text="Zakończ" />
+              <MenuItem mnemonicParsing="false" onAction="#logout" text="Wyloguj" />
+                  <MenuItem mnemonicParsing="false" onAction="#quit" text="Zakończ" />
             </items>
           </Menu>
         </menus>
