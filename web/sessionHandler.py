@@ -20,7 +20,7 @@ class SessionHandler:
         session = self.redisConnection.hget('sessionLogin', id)
         if session is not None:
             expTime = datetime.datetime.strptime(self.redisConnection.hget('sessionTime', id).decode("UTF-8"),
-                                                 '%Y-%m-%d %H:%M:%S')
+                                                 '%Y-%m-%d %H:%M:%S.%f')
             if expTime > datetime.datetime.now():
                 return True
         return False

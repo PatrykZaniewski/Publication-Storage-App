@@ -27,6 +27,10 @@ redisConn = redisHandler.RedisHandler(redis)
 redisConn.initUser()
 
 session = sessionHandler.SessionHandler(redis)
+downloadToken = ''
+uploadToken = ''
+listToken = ''
+deleteToken = ''
 
 
 @app.route('/')
@@ -95,6 +99,23 @@ def logout():
         response.set_cookie("session_id", "LOGGED_OUT", max_age=1)
         return response
     return redirect("/login")
+
+@app.route('/add')
+def addFile():
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            global uploadToken
+            print(uploadToken)
+
+            return render_template("index.html", uid=uid, uploadToken=uploadToken, downloadToken=downloadToken,
+                                   listOfFiles=listOfFiles, deleteToken=deleteToken, message=message)
+        else:
+            response = redirect("/login")
+            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
+            return response
+    return redirect("/login")
+
 
 
 @app.route('/callback')
