@@ -27,10 +27,6 @@ redisConn = redisHandler.RedisHandler(redis)
 redisConn.initUser()
 
 session = sessionHandler.SessionHandler(redis)
-downloadToken = ''
-uploadToken = ''
-listToken = ''
-deleteToken = ''
 
 
 @app.route('/')
@@ -60,11 +56,10 @@ def welcome():
             message = createFileMessage(err)
             uid = session.getNicknameSession(session_id)
             downloadToken = createDownloadToken(uid).decode('utf-8')
-            uploadToken = createUploadToken(uid).decode('utf-8')
             listToken = createListToken(uid).decode('utf-8')
             deleteToken = createDeleteToken(uid).decode('utf-8')
             listOfFiles = json.loads(requests.get("http://cdn:5000/list/" + uid + "?token=" + listToken).content)
-            return render_template("index.html", uid=uid, uploadToken=uploadToken, downloadToken=downloadToken,
+            return render_template("index.html", uid=uid, downloadToken=downloadToken,
                                    listOfFiles=listOfFiles, deleteToken=deleteToken, message=message)
         else:
             response = redirect("/login")
@@ -105,11 +100,10 @@ def addFile():
     session_id = request.cookies.get('session_id')
     if session_id:
         if session.checkSession(session_id):
-            global uploadToken
-            print(uploadToken)
+            uid = session.getNicknameSession(session_id)
+            uploadToken = createUploadToken(uid).decode('utf-8')
 
-            return render_template("index.html", uid=uid, uploadToken=uploadToken, downloadToken=downloadToken,
-                                   listOfFiles=listOfFiles, deleteToken=deleteToken, message=message)
+            return render_template("add.html", uid=uid, uploadToken=uploadToken)
         else:
             response = redirect("/login")
             response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
