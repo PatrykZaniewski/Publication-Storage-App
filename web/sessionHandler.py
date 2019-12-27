@@ -19,7 +19,7 @@ class SessionHandler:
     def checkSession(self, id):
         session = self.redisConnection.hget('sessionLogin', id)
         if session is not None:
-            expTime = datetime.datetime.strptime(self.redisConnection.hget('sessionTime', id).decode("UTF-8"),
+            expTime = datetime.datetime.strptime(self.redisConnection.hget('sessionTime', id),
                                                  '%Y-%m-%d %H:%M:%S.%f')
             if expTime > datetime.datetime.now():
                 return True
@@ -30,4 +30,4 @@ class SessionHandler:
         self.redisConnection.hdel('sessionLogin', id)
 
     def getNicknameSession(self, id):
-        return self.redisConnection.hget('sessionLogin', id).decode("UTF-8")
+        return self.redisConnection.hget('sessionLogin', id)

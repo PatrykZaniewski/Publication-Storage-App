@@ -13,6 +13,6 @@ class RedisHandler:
     def checkUser(self, login, password):
         if self.redisConnection.hget('account', login) is None:
             return False
-        if self.redisConnection.hget('account', login).decode("UTF-8") != password:
+        if self.redisConnection.hget('account', login)!= password:
             return False
         return True

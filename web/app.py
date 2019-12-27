@@ -22,7 +22,7 @@ JWT_SESSION_TIME = int(getenv('JWT_SESSION_TIME'))
 JWT_SECRET = getenv("JWT_SECRET")
 INVALIDATE = -1
 
-redis = redis.Redis(host="redis", port="6379")
+redis = redis.Redis(host="redis", port="6379", decode_responses=True)
 redisConn = redisHandler.RedisHandler(redis)
 redisConn.initUser()
 
@@ -55,17 +55,23 @@ def welcome():
         if session.checkSession(session_id):
             message = createFileMessage(err)
             uid = session.getNicknameSession(session_id)
+            #TODO token do sciagania wyeksportowac do details.html
             downloadToken = createDownloadToken(uid).decode('utf-8')
             listToken = createListToken(uid).decode('utf-8')
             deleteToken = createDeleteToken(uid).decode('utf-8')
-            listOfFiles = json.loads(requests.get("http://cdn:5000/list/" + uid + "?token=" + listToken).content)
+            listOfPublications = json.loads(requests.get("http://cdn:5000/list/" + uid + "?token=" + listToken).content)
             return render_template("index.html", uid=uid, downloadToken=downloadToken,
-                                   listOfFiles=listOfFiles, deleteToken=deleteToken, message=message)
+                                   listOfPublications=listOfPublications, deleteToken=deleteToken, message=message)
         else:
             response = redirect("/login")
             response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
             return response
     return redirect("/login")
+
+@app.route('/details')
+def details():
+    #TODO sprawdzanie ciastka itp., jakos pobieranie uid i fid + redirecty jak zeton zdechl
+    pass
 
 
 @app.route('/auth', methods=['POST'])
