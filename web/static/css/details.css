@@ -1,0 +1,67 @@
+body {
+    background: linear-gradient(to right, rgba(255, 253, 208, 1) 0%, rgba(255, 255, 245, 1) 54%, rgba(255, 253, 208, 1) 100%) fixed;
+}
+
+.col-6 {
+    margin: 5% 0 0 0;
+}
+
+.background .row {
+    border: 1px solid;
+    background: white;
+    border-radius: 10px;
+    margin: 2.5% 1.5% 2.5% 1.5%;
+    text-align: center;
+}
+
+.col-3 {
+    text-align: right;
+}
+
+.background {
+    background: linear-gradient(180deg, #AAAAAA 0%, #DCDCDC 51.04%, #AAAAAA 100%);
+    color: #000000;
+    border-radius: 10px;
+    border-style: solid;
+    border-width: 3px;
+}
+
+.title {
+    background: #727272;
+    text-align: center;
+    border-radius: 5px 5px 0 0;
+    padding: 5px;
+    color: whitesmoke;
+    text-shadow: 4px 4px black;
+    margin: 0 0 0 0;
+}
+
+.error, .info {
+    text-align: center;
+    font-size: 14px;
+    margin: 0 0 0 0;
+    border-radius: 2px 2px 0 0;
+    text-shadow: 2px 2px black;
+
+}
+
+.error {
+    color: red;
+}
+
+.info {
+    color: greenyellow;
+}
+
+#btn btn-primary {
+    background-color: #4CAF50;
+    color: white;
+    font-size: 18px;
+    padding: 12px;
+    border: none;
+    cursor: pointer;
+    width: 90%;
+    margin: 2% 5% 5% 5%;
+    border-radius: 5px;
+}
+

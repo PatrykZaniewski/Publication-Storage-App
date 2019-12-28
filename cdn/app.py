@@ -18,13 +18,46 @@ JWT_SECRET = getenv('JWT_SECRET')
 redis = redis.Redis(host="redis", port="6379", decode_responses=True)
 redisConn = redisHandler.RedisHandler(redis)
 
+@app.route('/list/<uid>/<pid>', methods=['DELETE'])
+def pubDel(uid, pid):
+    token = request.args.get('token')
+    if uid is None or len(uid) == 0:
+        return redirect("missing+uid")
+    if pid is None or len(pid) == 0:
+        #TODO przerobic komunikat zamiast file to pub
+        return redirect("missing+file")
+    if token is None:
+        return redirect("no+token+provided")
+    if not valid(token):
+        return redirect("invalid+token")
+    payload = jwt.decode(token, JWT_SECRET)
+    if payload.get('uid') != uid or payload.get('action') != 'list':
+        return redirect("invalid+token+payload")
+    redisConn.deleteData(uid, pid)
+    return redirect('deleted')
+
+
 @app.route('/list/<uid>/<pid>', methods=['GET'])
-def downloadFile(uid, pid):
-    return None
+def pubDetails(uid, pid):
+    token = request.args.get('token')
+    if uid is None or len(uid) == 0:
+        return redirect("missing+uid")
+    if pid is None or len(pid) == 0:
+        #TODO przerobic komunikat zamiast file to pub
+        return redirect("missing+file")
+    if token is None:
+        return redirect("no+token+provided")
+    if not valid(token):
+        return redirect("invalid+token")
+    payload = jwt.decode(token, JWT_SECRET)
+    if payload.get('uid') != uid or payload.get('action') != 'list':
+        return redirect("invalid+token+payload")
+    publication = redisConn.getData(uid, pid)
+    return publication
 
 
 @app.route('/list/<uid>', methods=['GET'])
-def list(uid):
+def pubList(uid):
     token = request.args.get('token')
 
     if uid is None or len(uid) == 0:

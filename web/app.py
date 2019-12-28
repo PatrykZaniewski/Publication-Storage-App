@@ -56,11 +56,10 @@ def welcome():
             message = createFileMessage(err)
             uid = session.getNicknameSession(session_id)
             #TODO token do sciagania wyeksportowac do details.html
-            downloadToken = createDownloadToken(uid).decode('utf-8')
             listToken = createListToken(uid).decode('utf-8')
             deleteToken = createDeleteToken(uid).decode('utf-8')
             listOfPublications = json.loads(requests.get("http://cdn:5000/list/" + uid + "?token=" + listToken).content)
-            return render_template("index.html", uid=uid, downloadToken=downloadToken,
+            return render_template("index.html", uid=uid, listToken=listToken,
                                    listOfPublications=listOfPublications, deleteToken=deleteToken, message=message)
         else:
             response = redirect("/login")
@@ -71,8 +70,26 @@ def welcome():
 @app.route('/details')
 def details():
     #TODO sprawdzanie ciastka itp., jakos pobieranie uid i fid + redirecty jak zeton zdechl
-    pass
 
+    uid = request.args.get('uid')
+    pid = request.args.get('pid')
+    token = request.args.get('token')
+    print(uid, " ", pid, " ", token, flush=True)
+
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            currUid = session.getNicknameSession(session_id)
+            #if currUid != uid: TODO zabezpieczyc dostep i jesli plik nie istnieje 2x ten sam token
+            publication = json.loads(requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token).content)
+            downloadToken = createDownloadToken(uid).decode('utf-8')
+            print(json.loads(publication), flush=True)
+            return render_template("details.html", uid=uid, publication=json.loads(publication))
+        else:
+            response = redirect("/login")
+            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
+            return response
+    return redirect("/login")
 
 @app.route('/auth', methods=['POST'])
 def auth():

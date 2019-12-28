@@ -28,3 +28,7 @@ class RedisHandler:
         data = self.redisConnection.hget(uid, pubID)
         return json.dumps(data)
 
+    def deleteData(self, uid, pubID):
+        self.redisConnection.hdel(uid, pubID)
+
+
