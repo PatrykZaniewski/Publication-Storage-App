@@ -55,21 +55,20 @@ def welcome():
         if session.checkSession(session_id):
             message = createFileMessage(err)
             uid = session.getNicknameSession(session_id)
-            #TODO token do sciagania wyeksportowac do details.html
             listToken = createListToken(uid).decode('utf-8')
-            deleteToken = createDeleteToken(uid).decode('utf-8')
             listOfPublications = json.loads(requests.get("http://cdn:5000/list/" + uid + "?token=" + listToken).content)
             return render_template("index.html", uid=uid, listToken=listToken,
-                                   listOfPublications=listOfPublications, deleteToken=deleteToken, message=message)
+                                   listOfPublications=listOfPublications, message=message)
         else:
             response = redirect("/login")
             response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
             return response
     return redirect("/login")
 
+
 @app.route('/details')
 def details():
-    #TODO sprawdzanie ciastka itp., jakos pobieranie uid i fid + redirecty jak zeton zdechl
+    # TODO sprawdzanie ciastka itp., jakos pobieranie uid i fid + redirecty jak zeton zdechl
 
     uid = request.args.get('uid')
     pid = request.args.get('pid')
@@ -80,16 +79,21 @@ def details():
     if session_id:
         if session.checkSession(session_id):
             currUid = session.getNicknameSession(session_id)
-            #if currUid != uid: TODO zabezpieczyc dostep i jesli plik nie istnieje 2x ten sam token
-            publication = json.loads(requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token).content)
+            # if currUid != uid: TODO zabezpieczyc dostep i jesli plik nie istnieje 2x ten sam token
+            publication = json.loads(
+                requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token).content)
             downloadToken = createDownloadToken(uid).decode('utf-8')
+            deleteToken = createDeleteToken(uid).decode('utf-8')
             print(json.loads(publication), flush=True)
-            return render_template("details.html", uid=uid, publication=json.loads(publication))
+            #TODO zrobic listowanie plikow do pobrania
+            return render_template("details.html", uid=uid, downloadToken=downloadToken, deleteToken=deleteToken,
+                                   publication=json.loads(publication))
         else:
             response = redirect("/login")
             response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
             return response
     return redirect("/login")
+
 
 @app.route('/auth', methods=['POST'])
 def auth():
@@ -118,6 +122,7 @@ def logout():
         return response
     return redirect("/login")
 
+
 @app.route('/add')
 def addFile():
     session_id = request.cookies.get('session_id')
@@ -132,7 +137,6 @@ def addFile():
             response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
             return response
     return redirect("/login")
-
 
 
 @app.route('/callback')
@@ -177,6 +181,8 @@ def createFileMessage(err):
         message = f'<div class="error">Nie wybrano pliku!</div>'
     elif err == "missing file":
         message = f'<div class="error">Wybrany plik nie istnieje!</div>'
+    elif err == "missing publication":
+        message = f'<div class="error">Wybrana publikacja nie istnieje!</div>'
     elif err == "missing uid":
         message = f'<div class="error">Nieprawidłowy użytkownik!</div>'
     elif err == "no token provided":
@@ -185,8 +191,8 @@ def createFileMessage(err):
         message = f'<div class="error">Token nieprawidłowy lub ważność wygasła!</div>'
     elif err == "invalid token payload":
         message = f'<div class="error">Niezgodność tokenu z użytkonikiem i/lub akcją!</div>'
-    elif err == "deleted":
-        message = f'<div class="info">Plik usunięto!</div>'
-    elif err == "ok":
-        message = f'<div class="info">Plik dodano!</div>'
+    elif err == "deleted publication":
+        message = f'<div class="info">Publikację usunięto!</div>'
+    elif err == "ok publication":
+        message = f'<div class="info">Publikację dodano!</div>'
     return message

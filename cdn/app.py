@@ -18,23 +18,24 @@ JWT_SECRET = getenv('JWT_SECRET')
 redis = redis.Redis(host="redis", port="6379", decode_responses=True)
 redisConn = redisHandler.RedisHandler(redis)
 
-@app.route('/list/<uid>/<pid>', methods=['DELETE'])
+
+@app.route('/dellist/<uid>/<pid>', methods=['POST'])
 def pubDel(uid, pid):
+    #TODO zrobic usuwanie plikow od razu
     token = request.args.get('token')
     if uid is None or len(uid) == 0:
         return redirect("missing+uid")
     if pid is None or len(pid) == 0:
-        #TODO przerobic komunikat zamiast file to pub
-        return redirect("missing+file")
+        return redirect("missing+publication")
     if token is None:
         return redirect("no+token+provided")
     if not valid(token):
         return redirect("invalid+token")
     payload = jwt.decode(token, JWT_SECRET)
-    if payload.get('uid') != uid or payload.get('action') != 'list':
+    if payload.get('uid') != uid or payload.get('action') != 'delete':
         return redirect("invalid+token+payload")
     redisConn.deleteData(uid, pid)
-    return redirect('deleted')
+    return redirect('deleted+publication')
 
 
 @app.route('/list/<uid>/<pid>', methods=['GET'])
@@ -43,8 +44,7 @@ def pubDetails(uid, pid):
     if uid is None or len(uid) == 0:
         return redirect("missing+uid")
     if pid is None or len(pid) == 0:
-        #TODO przerobic komunikat zamiast file to pub
-        return redirect("missing+file")
+        return redirect("missing+publication")
     if token is None:
         return redirect("no+token+provided")
     if not valid(token):
@@ -72,6 +72,39 @@ def pubList(uid):
     listOfPublications = redisConn.getList(uid)
     return listOfPublications
 
+
+@app.route('/publication', methods=['POST'])
+def upload():
+    t = request.form.get('token')
+    author = request.form.get('author')
+    publisher = request.form.get('publisher')
+    title = request.form.get('title')
+    date = request.form.get('publishDate')
+    uid = request.form.get('uid')
+    files = request.files.getlist('files')
+    print(files, flush=True)
+
+    if t is None:
+        return redirect("no+token+provided")
+    if not valid(t):
+        return redirect("invalid+token")
+    payload = jwt.decode(t, JWT_SECRET)
+    if payload.get('uid') != uid or payload.get('action') != 'upload':
+        return redirect("invalid+token+payload")
+    # TODO zrobic sprawdzanie czy takiego nie ma
+    pubID = str(redisConn.addData(uid, author, publisher, title, date))
+    if files is not None:
+        if not os.path.exists('/tmp/' + uid):
+            os.mkdir('/tmp/' + uid)
+        if not os.path.exists('/tmp/' + uid + '/' + pubID):
+            os.mkdir('/tmp/' + uid + '/' + pubID)
+        for file in files:
+            if file.filename != "":
+                file.save('/tmp/' + uid + '/' + pubID + '/' + file.filename)
+                file.close()
+    return redirect("ok+publication")
+
+
 @app.route('/files', methods=['GET'])
 def download():
     uid = request.args.get('uid')
@@ -90,32 +123,6 @@ def download():
     file = '/tmp/test/' + filename
     file = open(file, 'rb')
     return send_file(file, attachment_filename=filename, as_attachment=True)
-
-
-@app.route('/files', methods=['POST'])
-def upload():
-    f = request.files.get('file')
-    t = request.form.get('token')
-    author = request.form.get('author')
-    publisher = request.form.get('publisher')
-    title = request.form.get('title')
-    date = request.form.get('publishDate')
-    uid = request.form.get('uid')
-
-    if t is None:
-        return redirect("no+token+provided")
-    if not valid(t):
-        return redirect("invalid+token")
-    payload = jwt.decode(t, JWT_SECRET)
-    if payload.get('uid') != uid or payload.get('action') != 'upload':
-        return redirect("invalid+token+payload")
-    if f is not None and f.filename is not "":
-        if not os.path.exists("/tmp/" + uid):
-            os.mkdir("/tmp/" + uid)
-        f.save('/tmp/' + uid + "/" + f.filename)
-        f.close()
-    redisConn.addData(uid, author, publisher, title, date)
-    return redirect("ok")
 
 
 @app.route('/delfiles', methods=['POST'])

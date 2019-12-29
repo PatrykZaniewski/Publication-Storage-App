@@ -14,6 +14,7 @@ class RedisHandler:
         obj = {"author": author, "publisher": publisher, "title": title, "publishDate": publishDate, "pubID": pubID}
         objToStore = json.dumps(obj)
         self.redisConnection.hset(uid, pubID, objToStore)
+        return pubID
 
 
     def getList(self, uid):

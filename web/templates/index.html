@@ -17,20 +17,14 @@
         <div class="background">
             <h2 class="title">Twoje publikacje {{ message | safe }}</h2>
             <div class="list-group">
-
-
                 {% for id, title in listOfPublications.items() %}
-
-                    <!-- TODO linki zmienic do detalsow -->
-
                     <a class="list-group-item list-group-item-action"
                        href="https://web.company.com/details?token={{ listToken }}
                     &uid={{ uid }}&pid={{ id }}">{{loop.index}}. {{ title }}</a>
                 {% endfor %}
-
             </div>
             <form class="form" action="/add">
-                <input class="newPubButton" type="submit" value="Dodaj nową publikację"/>
+                <input class="btn btn-primary" type="submit" value="Dodaj nową publikację"/>
             </form>
         </div>
     </div>
