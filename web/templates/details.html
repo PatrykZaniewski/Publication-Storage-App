@@ -32,8 +32,33 @@
                     <label>Data dodania: {{ publication.get('publishDate') }}</label>
                 </div>
             </div>
-            <!-- TODO moze jednak w js DELETE?-->
-            <form class="form" action="https://cdn.company.com/dellist/{{ uid }}/{{ publication.get('pubID') }}?token={{ deleteToken }}" method="POST">
+            <div class="row">
+                <div class="col">
+                    <ul class="list-group list-group-flush">
+                        Pliki:
+                        {% for file in files %}
+                            <li class="list-group-item"><a
+                                    href="https://cdn.company.com/files?token={{ downloadToken }}
+                    &uid={{ uid }}&pid={{ publication.get('pubID') }}&filename={{ file }}">{{ loop.index }}. {{ file }}</a>
+                                <form action="https://cdn.company.com/delfiles?token={{ deleteToken }}
+                    &uid={{ uid }}&pid={{ publication.get('pubID') }}&filename={{ file }}" method="POST">
+                                    <button type="submit" class="btn btn-danger">Usuń</button>
+                                </form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <form class="form"
+                  action="https://cdn.company.com/files?token={{ uploadToken }}&uid={{ uid }}&pid={{ publication.get('pubID') }}"
+                  method="POST" enctype="multipart/form-data">
+                <input type="file" name="files" multiple/>
+                <!-- TODO przerwanie jak nie ma pliku -->
+                <button type="submit" class="btn btn-success">Dodaj pliki</button>
+            </form>
+            <form class="form"
+                  action="https://cdn.company.com/dellist/{{ uid }}/{{ publication.get('pubID') }}?token={{ deleteToken }}"
+                  method="POST">
                 <button type="submit" class="btn btn-danger">Usuń publikację</button>
             </form>
         </div>

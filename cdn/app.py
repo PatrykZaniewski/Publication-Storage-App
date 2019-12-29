@@ -9,6 +9,7 @@ from flask import make_response
 from flask import send_file
 from dotenv import load_dotenv
 from os import getenv
+import shutil
 
 load_dotenv(verbose=True)
 
@@ -35,6 +36,8 @@ def pubDel(uid, pid):
     if payload.get('uid') != uid or payload.get('action') != 'delete':
         return redirect("invalid+token+payload")
     redisConn.deleteData(uid, pid)
+    if os.path.exists('/tmp/' + uid + '/' + pid):
+        shutil.rmtree('/tmp/' + uid + '/' + pid)
     return redirect('deleted+publication')
 
 
@@ -52,8 +55,15 @@ def pubDetails(uid, pid):
     payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'list':
         return redirect("invalid+token+payload")
+    listOfFiles = []
+    if os.path.exists("/tmp/" + uid + "/" + pid):
+        listOfFiles = os.listdir("/tmp/" + uid + "/" + pid)
     publication = redisConn.getData(uid, pid)
-    return publication
+    publication = json.loads(publication)
+    listOfFiles = json.dumps(listOfFiles)
+    detailData = {'details': publication, 'files': listOfFiles}
+    detailData = json.dumps(detailData)
+    return detailData
 
 
 @app.route('/list/<uid>', methods=['GET'])
@@ -73,8 +83,8 @@ def pubList(uid):
     return listOfPublications
 
 
-@app.route('/publication', methods=['POST'])
-def upload():
+@app.route('/list', methods=['POST'])
+def pubUpload():
     t = request.form.get('token')
     author = request.form.get('author')
     publisher = request.form.get('publisher')
@@ -82,7 +92,6 @@ def upload():
     date = request.form.get('publishDate')
     uid = request.form.get('uid')
     files = request.files.getlist('files')
-    print(files, flush=True)
 
     if t is None:
         return redirect("no+token+provided")
@@ -92,22 +101,23 @@ def upload():
     if payload.get('uid') != uid or payload.get('action') != 'upload':
         return redirect("invalid+token+payload")
     # TODO zrobic sprawdzanie czy takiego nie ma
-    pubID = str(redisConn.addData(uid, author, publisher, title, date))
+    pid = str(redisConn.addData(uid, author, publisher, title, date))
     if files is not None:
         if not os.path.exists('/tmp/' + uid):
             os.mkdir('/tmp/' + uid)
-        if not os.path.exists('/tmp/' + uid + '/' + pubID):
-            os.mkdir('/tmp/' + uid + '/' + pubID)
+        if not os.path.exists('/tmp/' + uid + '/' + pid):
+            os.mkdir('/tmp/' + uid + '/' + pid)
         for file in files:
             if file.filename != "":
-                file.save('/tmp/' + uid + '/' + pubID + '/' + file.filename)
+                file.save('/tmp/' + uid + '/' + pid + '/' + file.filename)
                 file.close()
     return redirect("ok+publication")
 
 
 @app.route('/files', methods=['GET'])
-def download():
+def fileDownload():
     uid = request.args.get('uid')
+    pid = request.args.get('pid')
     token = request.args.get('token')
     filename = request.args.get('filename')
 
@@ -120,18 +130,45 @@ def download():
     payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'download':
         return redirect("invalid+token+payload")
-    file = '/tmp/test/' + filename
+    file = "/tmp/" + uid + "/" + pid + "/" + filename
     file = open(file, 'rb')
     return send_file(file, attachment_filename=filename, as_attachment=True)
 
 
-@app.route('/delfiles', methods=['POST'])
-def delete():
+@app.route('/files', methods=['POST'])
+def fileUpload():
+    pid = request.args.get('pid')
+    token = request.args.get('token')
     uid = request.args.get('uid')
+    files = request.files.getlist('files')
+
+    if token is None:
+        return redirect("no+token+provided")
+    if not valid(token):
+        return redirect("invalid+token")
+    payload = jwt.decode(token, JWT_SECRET)
+    if payload.get('uid') != uid or payload.get('action') != 'upload':
+        return redirect("invalid+token+payload")
+    if files is not None:
+        if not os.path.exists('/tmp/' + uid):
+            os.mkdir('/tmp/' + uid)
+        if not os.path.exists('/tmp/' + uid + '/' + pid):
+            os.mkdir('/tmp/' + uid + '/' + pid)
+        for file in files:
+            if file.filename != "":
+                file.save('/tmp/' + uid + '/' + pid + '/' + file.filename)
+                file.close()
+    return redirect("ok")
+
+
+@app.route('/delfiles', methods=['POST'])
+def fileDel():
+    uid = request.args.get('uid')
+    pid = request.args.get('pid')
     token = request.args.get('token')
     filename = request.args.get('filename')
 
-    if os.path.isfile("/tmp/" + uid + "/" + filename) is False:
+    if os.path.isfile("/tmp/" + uid + "/" + pid + "/" + filename) is False:
         return redirect("missing+file")
     if uid is None or len(uid) == 0:
         return redirect("missing+uid")
@@ -142,9 +179,9 @@ def delete():
     payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'delete':
         return redirect("invalid+token+payload")
-    file = '/tmp/test/' + filename
+    file = "/tmp/" + uid + "/" + pid + "/" + filename
     os.remove(file)
-    return redirect("deleted")
+    return redirect("deleted+file")
 
 
 def valid(token):

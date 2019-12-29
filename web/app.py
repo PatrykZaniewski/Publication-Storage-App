@@ -68,26 +68,22 @@ def welcome():
 
 @app.route('/details')
 def details():
-    # TODO sprawdzanie ciastka itp., jakos pobieranie uid i fid + redirecty jak zeton zdechl
-
     uid = request.args.get('uid')
     pid = request.args.get('pid')
     token = request.args.get('token')
-    print(uid, " ", pid, " ", token, flush=True)
 
     session_id = request.cookies.get('session_id')
     if session_id:
         if session.checkSession(session_id):
-            currUid = session.getNicknameSession(session_id)
-            # if currUid != uid: TODO zabezpieczyc dostep i jesli plik nie istnieje 2x ten sam token
-            publication = json.loads(
-                requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token).content)
+            print("przed wyciagnieciem", flush=True)
+            detailData = json.loads(requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token).content)
             downloadToken = createDownloadToken(uid).decode('utf-8')
             deleteToken = createDeleteToken(uid).decode('utf-8')
-            print(json.loads(publication), flush=True)
-            #TODO zrobic listowanie plikow do pobrania
-            return render_template("details.html", uid=uid, downloadToken=downloadToken, deleteToken=deleteToken,
-                                   publication=json.loads(publication))
+            uploadToken = createUploadToken(uid).decode('utf-8')
+            publication = detailData.get('details')
+            files = detailData.get('files')
+            return render_template("details.html", uid=uid, downloadToken=downloadToken, deleteToken=deleteToken, uploadToken=uploadToken,
+                                   publication=json.loads(publication), files=json.loads(files))
         else:
             response = redirect("/login")
             response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
@@ -103,7 +99,7 @@ def auth():
         response = make_response('', 303)
         if redisConn.checkUser(username, password) is True:
             session_id = session.createSession(username)
-            response.set_cookie("session_id", session_id, max_age=SESSION_TIME)
+            response.set_cookie("session_id", session_id, max_age=SESSION_TIME, httponly=True)
             response.headers["Location"] = "/index"
         else:
             response.set_cookie("session_id", "INVALIDATE", max_age=1)
@@ -130,7 +126,6 @@ def addFile():
         if session.checkSession(session_id):
             uid = session.getNicknameSession(session_id)
             uploadToken = createUploadToken(uid).decode('utf-8')
-
             return render_template("add.html", uid=uid, uploadToken=uploadToken)
         else:
             response = redirect("/login")
@@ -140,12 +135,13 @@ def addFile():
 
 
 @app.route('/callback')
-def uploaded():
+def callback():
     session_id = request.cookies.get('session_id')
     err = request.args.get('error')
     if session_id:
         if session.checkSession(session_id):
             se['err'] = err
+
     return redirect('/login')
 
 
