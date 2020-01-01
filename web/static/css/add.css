@@ -7,8 +7,12 @@ body {
 }
 
 .form {
-    margin: 2.5% 1.5% 2.5% 1.5%;
+    margin: 2.5% 1.5% 0% 1.5%;
     text-align: center;
+}
+
+.col {
+    margin: 2.5% 1.5% 0% 1.5%;
 }
 
 .col-3 {
@@ -32,21 +36,3 @@ body {
     text-shadow: 4px 4px black;
     margin: 0 0 0 0;
 }
-
-.error, .info {
-    text-align: center;
-    font-size: 14px;
-    margin: 0 0 0 0;
-    border-radius: 2px 2px 0 0;
-    text-shadow: 2px 2px black;
-
-}
-
-.error {
-    color: red;
-}
-
-.info {
-    color: greenyellow;
-}
-

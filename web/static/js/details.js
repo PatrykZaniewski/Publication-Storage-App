@@ -10,6 +10,6 @@ function afterLoad() {
 }
 
 function checkData(e){
-    //TODO dorobic checki + wyswietlanie bledu i bedize git
+    //TODO dorobic sprawdzanie pustego pliku
     e.preventDefault()
 }

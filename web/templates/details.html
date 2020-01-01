@@ -32,23 +32,26 @@
                     <label>Data dodania: {{ publication.get('publishDate') }}</label>
                 </div>
             </div>
-            <div class="row">
-                <div class="col">
-                    <ul class="list-group list-group-flush">
-                        Pliki:
-                        {% for file in files %}
-                            <li class="list-group-item"><a
-                                    href="https://cdn.company.com/files?token={{ downloadToken }}
+            {% if files|length > 0 %}
+                <div class="row">
+                    <div class="col">
+                        <ul class="list-group list-group-flush">
+                            Pliki:
+                            {% for file in files %}
+                                <li class="list-group-item"><a
+                                        href="https://cdn.company.com/files?token={{ downloadToken }}
                     &uid={{ uid }}&pid={{ publication.get('pubID') }}&filename={{ file }}">{{ loop.index }}. {{ file }}</a>
-                                <form action="https://cdn.company.com/delfiles?token={{ deleteToken }}
+                                    <form action="https://cdn.company.com/delfiles?token={{ deleteToken }}
                     &uid={{ uid }}&pid={{ publication.get('pubID') }}&filename={{ file }}" method="POST">
-                                    <button type="submit" class="btn btn-danger">Usuń</button>
-                                </form>
-                            </li>
-                        {% endfor %}
-                    </ul>
+                                        <button type="submit" class="btn btn-danger">Usuń</button>
+                                    </form>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 </div>
-            </div>
+            {% endif %}
+
             <form class="form"
                   action="https://cdn.company.com/files?token={{ uploadToken }}&uid={{ uid }}&pid={{ publication.get('pubID') }}"
                   method="POST" enctype="multipart/form-data">
@@ -56,11 +59,32 @@
                 <!-- TODO przerwanie jak nie ma pliku -->
                 <button type="submit" class="btn btn-success">Dodaj pliki</button>
             </form>
-            <form class="form"
-                  action="https://cdn.company.com/dellist/{{ uid }}/{{ publication.get('pubID') }}?token={{ deleteToken }}"
-                  method="POST">
-                <button type="submit" class="btn btn-danger">Usuń publikację</button>
-            </form>
+            <div class="row">
+                <div class="col">
+                    <form class="form"
+                          action="https://web.company.com"
+                          method="GET">
+                        <button type="submit" class="btn btn-info">Strona główna</button>
+                    </form>
+                </div>
+                <div class="col">
+                    <form class="form"
+                          action="https://web.company.com/edit"
+                          method="GET">
+                        <input type="hidden" name="token" value="{{ listToken }}"/>
+                        <input type="hidden" name="pid" value="{{ publication.get('pubID') }}"/>
+                        <input type="hidden" name="uid" value="{{ uid }}"/>
+                        <button type="submit" class="btn btn-primary">Edytuj publikację</button>
+                    </form>
+                </div>
+                <div class="col">
+                    <form class="form"
+                          action="https://cdn.company.com/dellist/{{ uid }}/{{ publication.get('pubID') }}?token={{ deleteToken }}"
+                          method="POST">
+                        <button type="submit" class="btn btn-danger">Usuń publikację</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
     <div class="col-3">

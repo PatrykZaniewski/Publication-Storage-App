@@ -75,15 +75,34 @@ def details():
     session_id = request.cookies.get('session_id')
     if session_id:
         if session.checkSession(session_id):
-            print("przed wyciagnieciem", flush=True)
             detailData = json.loads(requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token).content)
             downloadToken = createDownloadToken(uid).decode('utf-8')
             deleteToken = createDeleteToken(uid).decode('utf-8')
             uploadToken = createUploadToken(uid).decode('utf-8')
+            listToken = createListToken(uid).decode('utf-8')
             publication = detailData.get('details')
             files = detailData.get('files')
-            return render_template("details.html", uid=uid, downloadToken=downloadToken, deleteToken=deleteToken, uploadToken=uploadToken,
+            #TODO ten listToken to tak 2/10
+            return render_template("details.html", uid=uid, downloadToken=downloadToken, deleteToken=deleteToken, listToken=listToken, uploadToken=uploadToken,
                                    publication=json.loads(publication), files=json.loads(files))
+        else:
+            response = redirect("/login")
+            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
+            return response
+    return redirect("/login")
+
+@app.route('/edit')
+def edit():
+    uid = request.args.get('uid')
+    pid = request.args.get('pid')
+    token = request.args.get('token')
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            detailData = json.loads(requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token).content)
+            editToken = createEditToken(uid).decode('utf-8')
+            publication = detailData.get('details')
+            return render_template("edit.html", uid=uid, editToken=editToken, pid=pid, publication=json.loads(publication))
         else:
             response = redirect("/login")
             response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
@@ -164,6 +183,10 @@ def createDeleteToken(uid):
     exp = datetime.datetime.utcnow() + datetime.timedelta(seconds=JWT_SESSION_TIME)
     return jwt.encode({"iss": "web.company.com", "exp": exp, "uid": uid, "action": "delete"}, JWT_SECRET, "HS256")
 
+def createEditToken(uid):
+    exp = datetime.datetime.utcnow() + datetime.timedelta(seconds=JWT_SESSION_TIME)
+    return jwt.encode({"iss": "web.company.com", "exp": exp, "uid": uid, "action": "edit"}, JWT_SECRET, "HS256")
+
 
 def redirect(location):
     response = make_response('', 303)
@@ -191,4 +214,8 @@ def createFileMessage(err):
         message = f'<div class="info">Publikację usunięto!</div>'
     elif err == "ok publication":
         message = f'<div class="info">Publikację dodano!</div>'
+    elif err == "ok file":
+        message = f'<div class="info">Plik dodano do publikacji!</div>'
+    elif err == "ok publication updated":
+        message = f'<div class="info">Publikacja zaktualizowana!</div>'
     return message

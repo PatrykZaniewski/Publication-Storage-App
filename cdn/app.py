@@ -85,11 +85,12 @@ def pubList(uid):
 
 @app.route('/list', methods=['POST'])
 def pubUpload():
+    #TODO z data jest jakis problem
     t = request.form.get('token')
-    author = request.form.get('author')
-    publisher = request.form.get('publisher')
-    title = request.form.get('title')
-    date = request.form.get('publishDate')
+    author = request.form.get('author', 'NN')
+    publisher = request.form.get('publisher', 'NN')
+    title = request.form.get('title', 'NN')
+    date = request.form.get('publishDate', 'NN')
     uid = request.form.get('uid')
     files = request.files.getlist('files')
 
@@ -112,6 +113,25 @@ def pubUpload():
                 file.save('/tmp/' + uid + '/' + pid + '/' + file.filename)
                 file.close()
     return redirect("ok+publication")
+
+@app.route('/updlist/<uid>/<pid>', methods=['POST'])
+def pubUpd(uid, pid):
+    t = request.form.get('token')
+    author = request.form.get('author')
+    publisher = request.form.get('publisher')
+    title = request.form.get('title')
+    date = request.form.get('publishDate')
+
+    if t is None:
+        return redirect("no+token+provided")
+    if not valid(t):
+        return redirect("invalid+token")
+    payload = jwt.decode(t, JWT_SECRET)
+    if payload.get('uid') != uid or payload.get('action') != 'edit':
+        return redirect("invalid+token+payload")
+    redisConn.updateData(pid, uid, author, publisher, title, date)
+    #TODO zmienic kod
+    return redirect("ok+publication+updated")
 
 
 @app.route('/files', methods=['GET'])
@@ -158,7 +178,7 @@ def fileUpload():
             if file.filename != "":
                 file.save('/tmp/' + uid + '/' + pid + '/' + file.filename)
                 file.close()
-    return redirect("ok")
+    return redirect("ok+file")
 
 
 @app.route('/delfiles', methods=['POST'])

@@ -9,12 +9,16 @@ class RedisHandler:
 
 
     def addData(self, uid, author, publisher, title, publishDate):
-        #TODO sprawdzac czy nie istnieje juz o takim tytule
         pubID = self.redisConnection.hlen(uid)
         obj = {"author": author, "publisher": publisher, "title": title, "publishDate": publishDate, "pubID": pubID}
         objToStore = json.dumps(obj)
         self.redisConnection.hset(uid, pubID, objToStore)
         return pubID
+
+    def updateData(self, pid, uid, author, publisher, title, publishDate):
+        obj = {"author": author, "publisher": publisher, "title": title, "publishDate": publishDate, "pubID": pid}
+        objToStore = json.dumps(obj)
+        self.redisConnection.hset(uid, pid, objToStore)
 
 
     def getList(self, uid):
