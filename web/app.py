@@ -56,7 +56,8 @@ def welcome():
             message = createFileMessage(err)
             uid = session.getNicknameSession(session_id)
             listToken = createListToken(uid).decode('utf-8')
-            listOfPublications = json.loads(requests.get("http://cdn:5000/list/" + uid + "?token=" + listToken).content)
+            #listOfPublications = json.loads(requests.get("http://cdn:5000/list/" + uid + "?token=" + listToken).content)
+            listOfPublications = json.loads(requests.get("https://cdn.company.com/list/" + uid + "?token=" + listToken).content)
             return render_template("index.html", uid=uid, listToken=listToken,
                                    listOfPublications=listOfPublications, message=message)
         else:

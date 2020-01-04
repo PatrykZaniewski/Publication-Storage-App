@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <title>Repozytorium plików</title>
+    <script type=text/javascript src='../static/js/details.js'></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../static/css/details.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -15,7 +16,7 @@
     </div>
     <div class="col-6">
         <div class="background">
-            <h2 class="title">Publikacja o ID: {{ publication.get('pubID') }}</h2>
+            <h2 class="title" id="title">Publikacja o ID: {{ publication.get('pubID') }}</h2>
             <div class="row">
                 <div class="col">
                     <label>Tytuł: {{ publication.get('title') }}</label>
@@ -55,9 +56,8 @@
             <form class="form"
                   action="https://cdn.company.com/files?token={{ uploadToken }}&uid={{ uid }}&pid={{ publication.get('pubID') }}"
                   method="POST" enctype="multipart/form-data">
-                <input type="file" name="files" multiple/>
-                <!-- TODO przerwanie jak nie ma pliku -->
-                <button type="submit" class="btn btn-success">Dodaj pliki</button>
+                <input type="file" name="files" id="files" multiple/>
+                <button type="submit" class="btn btn-success" id="submitButton">Dodaj pliki</button>
             </form>
             <div class="row">
                 <div class="col">

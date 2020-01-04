@@ -1,15 +1,24 @@
 window.addEventListener("load", afterLoad);
-var author, title, publisher, date;
+var files
 
 function afterLoad() {
-    author = document.getElementById("author")
-    title = document.getElementById("title")
-    publisher = document.getElementById("publisher")
-    date = document.getElementById("date")
-    document.getElementById("submitButton").addEventListener("click", checkData)
+    files = document.getElementById("files");
+    document.getElementById("submitButton").addEventListener("click", checkFiles)
 }
 
-function checkData(e){
-    //TODO dorobic sprawdzanie pustego pliku
-    e.preventDefault()
+function checkFiles(e){
+    if (files.files.length === 0 || files.files.length == 0) {
+        let parent = document.getElementById("title");
+        let child = document.createElement("div");
+
+        if (parent.childElementCount > 0) {
+        parent.removeChild(parent.children[0]);
+        }
+
+        child.setAttribute("class", "error");
+        child.innerHTML = "Wybierz plik do dodania!";
+        parent.appendChild(child);
+
+        e.preventDefault()
+    }
 }

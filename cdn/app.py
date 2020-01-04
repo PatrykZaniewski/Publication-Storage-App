@@ -22,7 +22,6 @@ redisConn = redisHandler.RedisHandler(redis)
 
 @app.route('/dellist/<uid>/<pid>', methods=['POST'])
 def pubDel(uid, pid):
-    #TODO zrobic usuwanie plikow od razu
     token = request.args.get('token')
     if uid is None or len(uid) == 0:
         return redirect("missing+uid")
@@ -85,12 +84,11 @@ def pubList(uid):
 
 @app.route('/list', methods=['POST'])
 def pubUpload():
-    #TODO z data jest jakis problem
     t = request.form.get('token')
-    author = request.form.get('author', 'NN')
-    publisher = request.form.get('publisher', 'NN')
-    title = request.form.get('title', 'NN')
-    date = request.form.get('publishDate', 'NN')
+    author = request.form.get('author')
+    publisher = request.form.get('publisher')
+    title = request.form.get('title')
+    date = request.form.get('publishDate')
     uid = request.form.get('uid')
     files = request.files.getlist('files')
 
@@ -101,7 +99,6 @@ def pubUpload():
     payload = jwt.decode(t, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'upload':
         return redirect("invalid+token+payload")
-    # TODO zrobic sprawdzanie czy takiego nie ma
     pid = str(redisConn.addData(uid, author, publisher, title, date))
     if files is not None:
         if not os.path.exists('/tmp/' + uid):
@@ -130,7 +127,6 @@ def pubUpd(uid, pid):
     if payload.get('uid') != uid or payload.get('action') != 'edit':
         return redirect("invalid+token+payload")
     redisConn.updateData(pid, uid, author, publisher, title, date)
-    #TODO zmienic kod
     return redirect("ok+publication+updated")
 
 
