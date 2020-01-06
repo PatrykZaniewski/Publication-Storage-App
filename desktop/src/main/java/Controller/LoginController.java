@@ -42,7 +42,8 @@ public class LoginController {
                 stage.setTitle("Publication Storage");
                 Image icon = new Image("/Icons/icon.png");
                 stage.getIcons().add(icon);
-                stage.setScene(new Scene(root, 450, 450));
+                stage.setScene(new Scene(root, 600, 400));
+                stage.setResizable(false);
                 stage.setMinHeight(200);
                 stage.setMinWidth(200);
                 stage.show();
