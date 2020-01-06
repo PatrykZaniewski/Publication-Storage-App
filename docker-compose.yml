@@ -18,16 +18,16 @@ services:
       - ./web:/var/www/app
     depends_on:
       - redis
-    expose:
-      - 5000
+    ports:
+      - "5001:5000"
 
   cdn:
     image: chaberb/flask-jwt
     volumes:
       - ./cdn:/var/www/app
       - ./tmp:/tmp
-    expose:
-      - 5000
+    ports:
+      - "5002:5000"
 
   redis:
     image: redis

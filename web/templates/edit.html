@@ -17,7 +17,7 @@
     <div class="col-6">
         <div class="background">
             <h2 class="title" id="title">Edycja publikacji o ID: {{ pid }}</h2>
-            <form class="form" action="https://cdn.company.com/updlist/{{ uid }}/{{ pid }}" method="POST"
+            <form class="form" action="https://web.company.com/editpublication" method="POST"
                   enctype="multipart/form-data">
                 <div class="form-row">
                     <div class="form-group col-md-6">
@@ -39,8 +39,8 @@
                     <input type="date" class="form-control" name="publishDate" id="publishDate" value="{{ publication.get('date') }}">
                 </div>
                 <input type="hidden" name="token" value="{{ editToken }}"/>
-                <input type="hidden" name="callback" value="https://web.company.com/callback"/>
                 <input type="hidden" name="uid" value="{{ uid }}"/>
+                <input type="hidden" name="pid" value="{{ pid }}"/>
 
                 <div class="row">
                     <div class="col">

@@ -26,7 +26,7 @@ class RedisHandler:
         listData = {}
         for id, stringData in data.items():
             listData[id] = json.loads(stringData).get('title')
-        return json.dumps(listData)
+        return listData
 
 
     def getData(self, uid, pubID):

@@ -28,11 +28,15 @@ public class LoginController {
         if (!passwordField.getText().equals("") && !loginField.getText().equals("")) {
             if (redisHandler.checkData(loginField.getText(), passwordField.getText()) == 0) {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/FXML/mainWindow.fxml"));
+
                 Parent root = loader.load();
 
                 MainWindowController mainWindowController = loader.getController();
                 mainWindowController.setLogin(loginField.getText());
+                mainWindowController.afterLoad();
                 mainWindowController.setRedisHandler(redisHandler);
+
+
 
                 Stage stage = new Stage();
                 stage.setTitle("Publication Storage");

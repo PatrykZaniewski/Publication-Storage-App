@@ -17,7 +17,7 @@
     <div class="col-6">
         <div class="background">
             <h2 class="title" id="title">Dodaj nową publikację {{ message | safe }}</h2>
-            <form class="form" action="https://cdn.company.com/list" method="POST" enctype="multipart/form-data">
+            <form class="form" action="https://web.company.com/addpublication" method="POST" enctype="multipart/form-data">
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label>Autor:</label>
@@ -37,7 +37,6 @@
                     <input type="date" class="form-control" name="publishDate" id="publishDate">
                 </div>
                 <input type="hidden" name="token" value="{{ uploadToken }}"/>
-                <input type="hidden" name="callback" value="https://web.company.com/callback"/>
                 <input type="hidden" name="uid" value="{{ uid }}"/>
                 <input type="file" name="files" multiple/>
                 <div class="row">

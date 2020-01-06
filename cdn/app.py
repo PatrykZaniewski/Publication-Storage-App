@@ -23,37 +23,34 @@ redisConn = redisHandler.RedisHandler(redis)
 @app.route('/dellist/<uid>/<pid>', methods=['POST'])
 def pubDel(uid, pid):
     token = request.args.get('token')
-    if uid is None or len(uid) == 0:
-        return redirect("missing+uid")
-    if pid is None or len(pid) == 0:
-        return redirect("missing+publication")
+    if uid is None or len(uid) == 0 or pid is None or len(pid) == 0:
+        return make_response("noCredentials", 404)
     if token is None:
-        return redirect("no+token+provided")
+        return make_response("noTokenProvided", 400)
     if not valid(token):
-        return redirect("invalid+token")
+        return make_response("invalidToken", 401)
     payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'delete':
-        return redirect("invalid+token+payload")
+        return make_response("invalidTokenPayload", 403)
     redisConn.deleteData(uid, pid)
     if os.path.exists('/tmp/' + uid + '/' + pid):
         shutil.rmtree('/tmp/' + uid + '/' + pid)
-    return redirect('deleted+publication')
+    return make_response("deletedPublication", 200)
 
 
 @app.route('/list/<uid>/<pid>', methods=['GET'])
 def pubDetails(uid, pid):
     token = request.args.get('token')
-    if uid is None or len(uid) == 0:
-        return redirect("missing+uid")
-    if pid is None or len(pid) == 0:
-        return redirect("missing+publication")
+
+    if uid is None or len(uid) == 0 or pid is None or len(pid) == 0:
+        return make_response("noCredentials", 404)
     if token is None:
-        return redirect("no+token+provided")
+        return make_response("noTokenProvided", 400)
     if not valid(token):
-        return redirect("invalid+token")
+        return make_response("invalidToken", 401)
     payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'list':
-        return redirect("invalid+token+payload")
+        return make_response("invalidTokenPayload", 403)
     listOfFiles = []
     if os.path.exists("/tmp/" + uid + "/" + pid):
         listOfFiles = os.listdir("/tmp/" + uid + "/" + pid)
@@ -70,21 +67,30 @@ def pubList(uid):
     token = request.args.get('token')
 
     if uid is None or len(uid) == 0:
-        return redirect("missing+uid")
+        return make_response("noCredentials", 404)
     if token is None:
-        return redirect("no+token+provided")
+        return make_response("noTokenProvided", 400)
     if not valid(token):
-        return redirect("invalid+token")
+        return make_response("invalidToken", 401)
     payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'list':
-        return redirect("invalid+token+payload")
+        return make_response("invalidTokenPayload", 403)
     listOfPublications = redisConn.getList(uid)
-    return listOfPublications
+    print(type(listOfPublications), flush=True)
+    hateoas = {"_links": {"self": {"href": "https://cdn.company.com/list/" + uid, "method": "GET"},
+                          "details": {"href": "https://cdn.company.com/list/" + uid + "/0", "method": "GET"},
+                          "addPub": {"href": "https://cdn.company.com/list", "method": "POST"},
+                          "deletePub": {"href": "https://cdn.company.com/dellist/" + uid + "/0", "method": "POST"},
+                          "updPub": {"href": "https://cdn.company.com/updlist/" + uid + "/0", "method": "POST"},
+                          "getFiles": {"href": "https://cdn.company.com/files/" + uid + "/0", "method": "GET"}
+                          }}
+    print(hateoas, flush=True)
+    return json.dumps(listOfPublications)
 
 
 @app.route('/list', methods=['POST'])
 def pubUpload():
-    t = request.form.get('token')
+    token = request.form.get('token')
     author = request.form.get('author')
     publisher = request.form.get('publisher')
     title = request.form.get('title')
@@ -92,13 +98,15 @@ def pubUpload():
     uid = request.form.get('uid')
     files = request.files.getlist('files')
 
-    if t is None:
-        return redirect("no+token+provided")
-    if not valid(t):
-        return redirect("invalid+token")
-    payload = jwt.decode(t, JWT_SECRET)
+    if uid is None or len(uid) == 0:
+        return make_response("noCredentials", 404)
+    if token is None:
+        return make_response("noTokenProvided", 400)
+    if not valid(token):
+        return make_response("invalidToken", 401)
+    payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'upload':
-        return redirect("invalid+token+payload")
+        return make_response("invalidTokenPayload", 403)
     pid = str(redisConn.addData(uid, author, publisher, title, date))
     if files is not None:
         if not os.path.exists('/tmp/' + uid):
@@ -109,62 +117,66 @@ def pubUpload():
             if file.filename != "":
                 file.save('/tmp/' + uid + '/' + pid + '/' + file.filename)
                 file.close()
-    return redirect("ok+publication")
+    return make_response("uploadedPublication", 200)
+
 
 @app.route('/updlist/<uid>/<pid>', methods=['POST'])
 def pubUpd(uid, pid):
-    t = request.form.get('token')
+    token = request.form.get('token')
     author = request.form.get('author')
     publisher = request.form.get('publisher')
     title = request.form.get('title')
     date = request.form.get('publishDate')
 
-    if t is None:
-        return redirect("no+token+provided")
-    if not valid(t):
-        return redirect("invalid+token")
-    payload = jwt.decode(t, JWT_SECRET)
+    if uid is None or len(uid) == 0 or pid is None or len(pid) == 0:
+        return make_response("noCredentials", 404)
+    if token is None:
+        return make_response("noTokenProvided", 400)
+    if not valid(token):
+        return make_response("invalidToken", 401)
+    payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'edit':
-        return redirect("invalid+token+payload")
+        return make_response("invalidTokenPayload", 403)
     redisConn.updateData(pid, uid, author, publisher, title, date)
-    return redirect("ok+publication+updated")
+    return make_response("updatedPublication", 200)
 
 
-@app.route('/files', methods=['GET'])
-def fileDownload():
-    uid = request.args.get('uid')
-    pid = request.args.get('pid')
+@app.route('/files/<uid>/<pid>', methods=['GET'])
+def fileDownload(uid, pid):
     token = request.args.get('token')
     filename = request.args.get('filename')
 
-    if uid is None or len(uid) == 0:
-        return redirect("missing+uid")
+    if uid is None or len(uid) == 0 or pid is None or len(pid) == 0:
+        return make_response("noCredentials", 404)
     if token is None:
-        return redirect("no+token+provided")
+        return make_response("noTokenProvided", 400)
     if not valid(token):
-        return redirect("invalid+token")
+        return make_response("invalidToken", 401)
     payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'download':
-        return redirect("invalid+token+payload")
+        return make_response("invalidTokenPayload", 403)
+    if os.path.isfile("/tmp/" + uid + "/" + pid + "/" + filename) is False:
+        return make_response("fileNotFound", 404)
     file = "/tmp/" + uid + "/" + pid + "/" + filename
     file = open(file, 'rb')
     return send_file(file, attachment_filename=filename, as_attachment=True)
 
 
-@app.route('/files', methods=['POST'])
-def fileUpload():
-    pid = request.args.get('pid')
+@app.route('/files/<uid>/<pid>', methods=['POST'])
+def fileUpload(uid, pid):
     token = request.args.get('token')
-    uid = request.args.get('uid')
     files = request.files.getlist('files')
 
+    if uid is None or len(uid) == 0 or pid is None or len(pid) == 0:
+        return make_response("noCredentials", 404)
     if token is None:
-        return redirect("no+token+provided")
+        return make_response("noTokenProvided", 400)
     if not valid(token):
-        return redirect("invalid+token")
+        return make_response("invalidToken", 401)
     payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'upload':
-        return redirect("invalid+token+payload")
+        return make_response("invalidTokenPayload", 403)
+
     if files is not None:
         if not os.path.exists('/tmp/' + uid):
             os.mkdir('/tmp/' + uid)
@@ -174,30 +186,28 @@ def fileUpload():
             if file.filename != "":
                 file.save('/tmp/' + uid + '/' + pid + '/' + file.filename)
                 file.close()
-    return redirect("ok+file")
+    return make_response("uploadedFile", 200)
 
 
-@app.route('/delfiles', methods=['POST'])
-def fileDel():
-    uid = request.args.get('uid')
-    pid = request.args.get('pid')
+@app.route('/delfiles/<uid>/<pid>', methods=['POST'])
+def fileDel(uid, pid):
     token = request.args.get('token')
     filename = request.args.get('filename')
 
-    if os.path.isfile("/tmp/" + uid + "/" + pid + "/" + filename) is False:
-        return redirect("missing+file")
-    if uid is None or len(uid) == 0:
-        return redirect("missing+uid")
+    if uid is None or len(uid) == 0 or pid is None or len(pid) == 0:
+        return make_response("noCredentials", 404)
     if token is None:
-        return redirect("no+token+provided")
+        return make_response("noTokenProvided", 400)
     if not valid(token):
-        return redirect("invalid+token")
+        return make_response("invalidToken", 401)
     payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'delete':
-        return redirect("invalid+token+payload")
+        return make_response("invalidTokenPayload", 403)
+    if os.path.isfile("/tmp/" + uid + "/" + pid + "/" + filename) is False:
+        return make_response("fileNotFound", 404)
     file = "/tmp/" + uid + "/" + pid + "/" + filename
     os.remove(file)
-    return redirect("deleted+file")
+    return make_response("deletedFile", 200)
 
 
 def valid(token):
@@ -207,10 +217,3 @@ def valid(token):
         app.logger.error(str(e))
         return False
     return True
-
-
-def redirect(error):
-    response = make_response("", 303)
-    response.headers["Location"] = "https://web.company.com/callback?error=" + error
-    response.headers["Content-Type"] = "multipart/form-data"
-    return response

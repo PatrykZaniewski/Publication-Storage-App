@@ -56,8 +56,7 @@ def welcome():
             message = createFileMessage(err)
             uid = session.getNicknameSession(session_id)
             listToken = createListToken(uid).decode('utf-8')
-            #listOfPublications = json.loads(requests.get("http://cdn:5000/list/" + uid + "?token=" + listToken).content)
-            listOfPublications = json.loads(requests.get("https://cdn.company.com/list/" + uid + "?token=" + listToken).content)
+            listOfPublications = json.loads(requests.get("http://cdn:5000/list/" + uid + "?token=" + listToken).content)
             return render_template("index.html", uid=uid, listToken=listToken,
                                    listOfPublications=listOfPublications, message=message)
         else:
@@ -68,7 +67,7 @@ def welcome():
 
 
 @app.route('/details')
-def details():
+def detailsPublication():
     uid = request.args.get('uid')
     pid = request.args.get('pid')
     token = request.args.get('token')
@@ -76,15 +75,18 @@ def details():
     session_id = request.cookies.get('session_id')
     if session_id:
         if session.checkSession(session_id):
-            detailData = json.loads(requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token).content)
+            req = requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token)
+            if req.status_code != requests.codes.ok:
+                return redirectCallback(req.text)
+            detailData = json.loads(req.content)
             downloadToken = createDownloadToken(uid).decode('utf-8')
             deleteToken = createDeleteToken(uid).decode('utf-8')
             uploadToken = createUploadToken(uid).decode('utf-8')
             listToken = createListToken(uid).decode('utf-8')
             publication = detailData.get('details')
             files = detailData.get('files')
-            #TODO ten listToken to tak 2/10
-            return render_template("details.html", uid=uid, downloadToken=downloadToken, deleteToken=deleteToken, listToken=listToken, uploadToken=uploadToken,
+            return render_template("details.html", uid=uid, downloadToken=downloadToken, deleteToken=deleteToken,
+                                   listToken=listToken, uploadToken=uploadToken,
                                    publication=json.loads(publication), files=json.loads(files))
         else:
             response = redirect("/login")
@@ -92,23 +94,46 @@ def details():
             return response
     return redirect("/login")
 
+
 @app.route('/edit')
-def edit():
+def editPublication():
     uid = request.args.get('uid')
     pid = request.args.get('pid')
     token = request.args.get('token')
     session_id = request.cookies.get('session_id')
     if session_id:
         if session.checkSession(session_id):
-            detailData = json.loads(requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token).content)
+            req = requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token)
+            if req.status_code != requests.codes.ok:
+                return redirectCallback(req.text)
+            detailData = json.loads(req.content)
             editToken = createEditToken(uid).decode('utf-8')
             publication = detailData.get('details')
-            return render_template("edit.html", uid=uid, editToken=editToken, pid=pid, publication=json.loads(publication))
+            return render_template("edit.html", uid=uid, editToken=editToken, pid=pid,
+                                   publication=json.loads(publication))
         else:
             response = redirect("/login")
             response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
             return response
     return redirect("/login")
+
+
+@app.route('/editpublication', methods=['POST'])
+def editPublicationExecutive():
+    token = request.form.get('token')
+    author = request.form.get('author')
+    publisher = request.form.get('publisher')
+    title = request.form.get('title')
+    date = request.form.get('publishDate')
+    pid = request.form.get('pid')
+    uid = request.form.get('uid')
+
+    objToSend = {'author': author, 'publisher': publisher, 'title': title, 'publishDate': date, 'uid': uid,
+                 'token': token}
+
+    req = requests.post("http://cdn:5000/updlist/" + uid + "/" + pid, data=objToSend)
+
+    return redirectCallback(req.text)
 
 
 @app.route('/auth', methods=['POST'])
@@ -140,7 +165,7 @@ def logout():
 
 
 @app.route('/add')
-def addFile():
+def addPublication():
     session_id = request.cookies.get('session_id')
     if session_id:
         if session.checkSession(session_id):
@@ -152,6 +177,65 @@ def addFile():
             response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
             return response
     return redirect("/login")
+
+
+@app.route('/addfiles', methods=['POST'])
+def addFilesExecutive():
+    token = request.form.get('token')
+    uid = request.form.get('uid')
+    pid = request.form.get('pid')
+    files = request.files.getlist('files')
+
+    files = [('files', (f.filename, f.read())) for f in files]
+
+    req = requests.post("http://cdn:5000/files/" + uid + "/" + pid + "?token=" + token, files=files)
+    return redirectCallback(req.text)
+
+
+@app.route('/addpublication', methods=['POST'])
+def addPubExecutive():
+    token = request.form.get('token')
+    author = request.form.get('author')
+    publisher = request.form.get('publisher')
+    title = request.form.get('title')
+    date = request.form.get('publishDate')
+    uid = request.form.get('uid')
+    files = request.files.getlist('files')
+
+    objToSend = {'author': author, 'publisher': publisher, 'title': title, 'publishDate': date, 'uid': uid,
+                 'token': token}
+    files = [('files', (f.filename, f.read())) for f in files]
+
+    req = requests.post("http://cdn:5000/list", data=objToSend, files=files)
+    return redirectCallback(req.text)
+
+
+@app.route('/deletepublication', methods=['POST'])
+def delPubExecutive():
+    token = request.form.get('token')
+    uid = request.form.get('uid')
+    pid = request.form.get('pid')
+
+    req = requests.post("http://cdn:5000/dellist/" + uid + "/" + pid + "?token=" + token)
+    return redirectCallback(req.text)
+
+
+@app.route('/deletefile', methods=['POST'])
+def delFileExecutive():
+    token = request.form.get('token')
+    uid = request.form.get('uid')
+    pid = request.form.get('pid')
+    filename = request.form.get('filename')
+
+    req = requests.post("http://cdn:5000/delfiles/" + uid + "/" + pid + "?token=" + token + "&filename=" + filename)
+    return redirectCallback(req.text)
+
+
+def redirectCallback(error):
+    response = make_response("", 303)
+    response.headers["Location"] = "https://web.company.com/callback?error=" + error
+    response.headers["Content-Type"] = "multipart/form-data"
+    return response
 
 
 @app.route('/callback')
@@ -184,6 +268,7 @@ def createDeleteToken(uid):
     exp = datetime.datetime.utcnow() + datetime.timedelta(seconds=JWT_SESSION_TIME)
     return jwt.encode({"iss": "web.company.com", "exp": exp, "uid": uid, "action": "delete"}, JWT_SECRET, "HS256")
 
+
 def createEditToken(uid):
     exp = datetime.datetime.utcnow() + datetime.timedelta(seconds=JWT_SESSION_TIME)
     return jwt.encode({"iss": "web.company.com", "exp": exp, "uid": uid, "action": "edit"}, JWT_SECRET, "HS256")
@@ -197,26 +282,24 @@ def redirect(location):
 
 def createFileMessage(err):
     message = ''
-    if err == "no file provided":
-        message = f'<div class="error">Nie wybrano pliku!</div>'
-    elif err == "missing file":
+    if err == "fileNotFound":
         message = f'<div class="error">Wybrany plik nie istnieje!</div>'
-    elif err == "missing publication":
-        message = f'<div class="error">Wybrana publikacja nie istnieje!</div>'
-    elif err == "missing uid":
-        message = f'<div class="error">Nieprawidłowy użytkownik!</div>'
-    elif err == "no token provided":
+    elif err == "noCredentials":
+        message = f'<div class="error">Nieprawidłowe dane użytkownika/publikacji!</div>'
+    elif err == "noTokenProvided":
         message = f'<div class="error">Brak tokenu - odśwież stronę!</div>'
-    elif err == "invalid token":
+    elif err == "invalidToken":
         message = f'<div class="error">Token nieprawidłowy lub ważność wygasła!</div>'
-    elif err == "invalid token payload":
-        message = f'<div class="error">Niezgodność tokenu z użytkonikiem i/lub akcją!</div>'
-    elif err == "deleted publication":
+    elif err == "invalidTokenPayload":
+        message = f'<div class="error">Niezgodność tokenu z użytkownikiem i/lub akcją!</div>'
+    elif err == "deletedPublication":
         message = f'<div class="info">Publikację usunięto!</div>'
-    elif err == "ok publication":
+    elif err == "uploadedPublication":
         message = f'<div class="info">Publikację dodano!</div>'
-    elif err == "ok file":
+    elif err == "uploadedFile":
         message = f'<div class="info">Plik dodano do publikacji!</div>'
-    elif err == "ok publication updated":
+    elif err == "updatedPublication":
         message = f'<div class="info">Publikacja zaktualizowana!</div>'
+    elif err == "deletedFile":
+        message = f'<div class="info">Plik usunięto!</div>'
     return message
