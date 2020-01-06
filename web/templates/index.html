@@ -18,9 +18,11 @@
             <h2 class="title">Twoje publikacje {{ message | safe }}</h2>
             <div class="list-group">
                 {% for id, title in listOfPublications.items() %}
+                    {% if id != '_links' %}
                     <a class="list-group-item list-group-item-action"
                        href="https://web.company.com/details?token={{ listToken }}
                     &uid={{ uid }}&pid={{ id }}">{{loop.index}}. {{ title }}</a>
+                    {% endif %}
                 {% endfor %}
             </div>
             <form class="form" action="/add">

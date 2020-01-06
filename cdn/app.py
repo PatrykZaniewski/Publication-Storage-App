@@ -76,7 +76,6 @@ def pubList(uid):
     if payload.get('uid') != uid or payload.get('action') != 'list':
         return make_response("invalidTokenPayload", 403)
     listOfPublications = redisConn.getList(uid)
-    print(type(listOfPublications), flush=True)
     hateoas = {"_links": {"self": {"href": "https://cdn.company.com/list/" + uid, "method": "GET"},
                           "details": {"href": "https://cdn.company.com/list/" + uid + "/0", "method": "GET"},
                           "addPub": {"href": "https://cdn.company.com/list", "method": "POST"},
@@ -84,7 +83,7 @@ def pubList(uid):
                           "updPub": {"href": "https://cdn.company.com/updlist/" + uid + "/0", "method": "POST"},
                           "getFiles": {"href": "https://cdn.company.com/files/" + uid + "/0", "method": "GET"}
                           }}
-    print(hateoas, flush=True)
+    listOfPublications.update(hateoas)
     return json.dumps(listOfPublications)
 
 
