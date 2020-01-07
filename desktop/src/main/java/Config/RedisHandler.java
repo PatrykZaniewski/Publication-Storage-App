@@ -51,7 +51,6 @@ public class RedisHandler {
 
     private void createRedisRecord(String login)
     {
-        //TODO zrobić konta z pliku
         SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date date = new Date(System.currentTimeMillis());
         redisHandler.hset("DesktopLoginHistory", login, formatter.format(date));

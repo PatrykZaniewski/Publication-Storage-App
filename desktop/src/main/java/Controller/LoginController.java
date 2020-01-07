@@ -37,7 +37,6 @@ public class LoginController {
                 mainWindowController.setRedisHandler(redisHandler);
 
 
-
                 Stage stage = new Stage();
                 stage.setTitle("Publication Storage");
                 Image icon = new Image("/Icons/icon.png");

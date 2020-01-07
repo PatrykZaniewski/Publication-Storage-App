@@ -66,8 +66,7 @@ public class AddPublication {
                 }
 
                 int response = multipartRequest.finish();
-                if(response == 200)
-                {
+                if (response == 200) {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Dodawanie publikacji");
                     alert.setHeaderText(null);

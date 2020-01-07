@@ -113,14 +113,12 @@ public class DetailsController {
         filesString = filesString.replace("\"", "");
         List<String> filesList = Arrays.asList(filesString.substring(1, filesString.length() - 1).split(","));
         VBox vbox = new VBox();
-        System.out.println(filesList.get(0));
         if (filesList.size() > 0 && !filesList.get(0).equals("")) {
             for (String filename : filesList) {
                 HBox hbox = new HBox();
                 Label fileLink = new Label(filename);
                 fileLink.setStyle("-fx-underline: true; -fx-text-fill: #0000ff");
                 fileLink.setOnMouseClicked(event -> {
-                    System.out.println("XDDD");
                     downloadFile(filename);
                 });
                 Label fileDelete = new Label("        Usuń");
@@ -202,13 +200,11 @@ public class DetailsController {
 
         if (files.size() > 0) {
             try {
-                System.out.println("XDDD");
                 MultipartRequest multipartRequest = new MultipartRequest("http://localhost:5002/files/" + login + "/" + publicationId + "?token=" + uploadToken, "UTF-8");
                 for (File file : files) {
                     multipartRequest.addFilePart("files", file);
                 }
                 int response = multipartRequest.finish();
-                System.out.println(response);
                 if (response == 200) {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Dodawanie plików");
@@ -223,5 +219,18 @@ public class DetailsController {
         }
 
 
+    }
+
+    public void deletePublication(ActionEvent actionEvent) {
+        try {
+            MultipartRequest multipartRequest = new MultipartRequest("http://localhost:5002/dellist/" + login + "/" + publicationId + "?token=" + deleteToken, "UTF-8");
+            int response = multipartRequest.finish();
+            if (response == 200) {
+                Stage currStage = (Stage) authorField.getScene().getWindow();
+                currStage.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

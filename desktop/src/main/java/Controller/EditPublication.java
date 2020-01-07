@@ -52,9 +52,7 @@ public class EditPublication {
             multipartRequest.addFormField("token", editToken);
 
             int response = multipartRequest.finish();
-            System.out.println(response);
-            if(response == 200)
-            {
+            if (response == 200) {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Uaktualnianie publikacji");
                 alert.setHeaderText(null);
@@ -68,25 +66,21 @@ public class EditPublication {
         }
     }
 
-    public void setData(String author, String title, String publisher, String date)
-    {
+    public void setData(String author, String title, String publisher, String date) {
         this.author = author;
         this.title = title;
         this.publisher = publisher;
         this.date = date;
     }
 
-    public void afterLoad()
-    {
+    public void afterLoad() {
         displayData();
     }
 
-    public void displayData()
-    {
+    public void displayData() {
         authorField.setText(author);
         titleField.setText(title);
         publisherField.setText(publisher);
-        System.out.println(date);
         dateField.setValue(LocalDate.parse(date));
     }
 }

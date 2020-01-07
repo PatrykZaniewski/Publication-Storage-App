@@ -7,8 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 public class TokenHandler {
-    public String listToken(String login)
-    {
+    public String listToken(String login) {
         return Jwts.builder()
                 .setIssuer("desktop.app")
                 .claim("exp", new Date(2147483647))
@@ -21,8 +20,7 @@ public class TokenHandler {
                 .compact();
     }
 
-    public String uploadToken(String login)
-    {
+    public String uploadToken(String login) {
         return Jwts.builder()
                 .setIssuer("desktop.app")
                 .claim("exp", new Date(2147483647))
@@ -35,8 +33,7 @@ public class TokenHandler {
                 .compact();
     }
 
-    public String deleteToken(String login)
-    {
+    public String deleteToken(String login) {
         return Jwts.builder()
                 .setIssuer("desktop.app")
                 .claim("exp", new Date(2147483647))
@@ -49,8 +46,7 @@ public class TokenHandler {
                 .compact();
     }
 
-    public String editToken(String login)
-    {
+    public String editToken(String login) {
         return Jwts.builder()
                 .setIssuer("desktop.app")
                 .claim("exp", new Date(2147483647))
