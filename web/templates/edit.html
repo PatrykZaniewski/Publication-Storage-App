@@ -36,7 +36,7 @@
                 </div>
                 <div class="form-group">
                     <label>Data publikacji:</label>
-                    <input type="date" class="form-control" name="publishDate" id="publishDate" value="{{ publication.get('date') }}">
+                    <input type="date" class="form-control" name="publishDate" id="publishDate" value="{{ publication.get('publishDate') }}">
                 </div>
                 <input type="hidden" name="token" value="{{ editToken }}"/>
                 <input type="hidden" name="uid" value="{{ uid }}"/>
