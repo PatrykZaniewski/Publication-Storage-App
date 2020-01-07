@@ -34,4 +34,32 @@ public class TokenHandler {
                 )
                 .compact();
     }
+
+    public String deleteToken(String login)
+    {
+        return Jwts.builder()
+                .setIssuer("desktop.app")
+                .claim("exp", new Date(2147483647))
+                .claim("uid", login)
+                .claim("action", "delete")
+                .signWith(
+                        SignatureAlgorithm.HS256,
+                        "SECRET".getBytes(StandardCharsets.UTF_8)
+                )
+                .compact();
+    }
+
+    public String editToken(String login)
+    {
+        return Jwts.builder()
+                .setIssuer("desktop.app")
+                .claim("exp", new Date(2147483647))
+                .claim("uid", login)
+                .claim("action", "edit")
+                .signWith(
+                        SignatureAlgorithm.HS256,
+                        "SECRET".getBytes(StandardCharsets.UTF_8)
+                )
+                .compact();
+    }
 }

@@ -44,11 +44,12 @@ public class MainWindowController {
     private RedisHandler redisHandler;
     private String listToken;
     private String uploadToken;
+    private String deleteToken;
+    private String editToken;
     private JSONObject dataJson;
 
     public void setLogin(String login) {
         this.login = login;
-
     }
 
     public void setRedisHandler(RedisHandler redisHandler) {
@@ -66,6 +67,8 @@ public class MainWindowController {
         TokenHandler tokenHandler = new TokenHandler();
         listToken = tokenHandler.listToken(login);
         uploadToken = tokenHandler.uploadToken(login);
+        deleteToken = tokenHandler.deleteToken(login);
+        editToken = tokenHandler.editToken(login);
     }
 
     public void getData() {
@@ -112,13 +115,11 @@ public class MainWindowController {
     public void displayData() {
         Set<String> keys = dataJson.keySet();
         ObservableList<BasicData> basicData = FXCollections.observableArrayList();
-        int index = 1;
 
         for (String key : keys) {
             if (!key.equals("_links")) {
-                BasicData bs = new BasicData(index, (String) dataJson.get(key));
+                BasicData bs = new BasicData(Integer.parseInt(key), (String) dataJson.get(key));
                 basicData.add(bs);
-                index++;
             }
         }
         displayTable.setItems(basicData);
@@ -135,6 +136,9 @@ public class MainWindowController {
             detailsController.setLogin(login);
             detailsController.setPublicationId(id);
             detailsController.setListToken(listToken);
+            detailsController.setUploadToken(uploadToken);
+            detailsController.setDeleteToken(deleteToken);
+            detailsController.setEditToken(editToken);
             detailsController.afterLoad();
 
             stage.setTitle("Publication Storage");
@@ -146,6 +150,7 @@ public class MainWindowController {
             stage.initOwner(MenuBar.getScene().getWindow());
             stage.initModality(Modality.WINDOW_MODAL);
             stage.showAndWait();
+            getData();
         } catch (IOException e) {
             e.printStackTrace();
         }

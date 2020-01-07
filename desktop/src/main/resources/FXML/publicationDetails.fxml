@@ -2,13 +2,14 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 
 <AnchorPane prefHeight="300.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller.DetailsController">
     <children>
-        <Button layoutX="14.0" layoutY="161.0" mnemonicParsing="false" text="Anuluj" />
-        <Button layoutX="178.0" layoutY="161.0" mnemonicParsing="false" text="Dodaj" />
+        <Button layoutX="14.0" layoutY="261.0" mnemonicParsing="false" onAction="#closeDetails" text="Zamknij" />
+        <Button layoutX="338.0" layoutY="261.0" mnemonicParsing="false" onAction="#editDetails" text="Edytuj" />
         <TextField fx:id="authorField" editable="false" layoutX="14.0" layoutY="37.0" prefHeight="25.0" prefWidth="149.0" />
         <TextField fx:id="publisherField" editable="false" layoutX="237.0" layoutY="37.0" />
         <TextField fx:id="titleField" editable="false" layoutX="14.0" layoutY="81.0" prefHeight="25.0" prefWidth="372.0" />
@@ -17,6 +18,12 @@
         <Label layoutX="269.0" layoutY="14.0" text="Kto opublikowal:" />
         <Label layoutX="187.0" layoutY="62.0" text="Tytuł:" />
         <Label layoutX="50.0" layoutY="106.0" text="Data publikacji:" />
-        <Button layoutX="220.0" layoutY="123.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="166.0" text="Dodaj pliki" />
+        <Button layoutX="221.0" layoutY="123.0" mnemonicParsing="false" onAction="#addFiles" prefHeight="25.0" prefWidth="166.0" text="Dodaj pliki" />
+      <Label layoutX="171.0" layoutY="165.0" text="Twoje pliki:" />
+      <ScrollPane fx:id="filesPane" layoutX="100.0" layoutY="182.0" prefHeight="124.0" prefWidth="200.0">
+        <content>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="131.0" prefWidth="200.0" />
+        </content>
+      </ScrollPane>
     </children>
 </AnchorPane>

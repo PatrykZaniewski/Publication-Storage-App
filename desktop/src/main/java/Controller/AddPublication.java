@@ -66,7 +66,6 @@ public class AddPublication {
                 }
 
                 int response = multipartRequest.finish();
-                System.out.println(response);
                 if(response == 200)
                 {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
