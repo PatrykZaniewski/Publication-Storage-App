@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <title>Repozytorium plików</title>
+    <script type=text/javascript src='../static/js/index.js'></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../static/css/index.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -12,6 +13,11 @@
 <body>
 <div class="row">
     <div class="col-3">
+        <div class="backgroundNotifications">
+            <h2 class="title">Powiadomienia:</h2>
+            <div id="title" class="list-group">
+            </div>
+        </div>
     </div>
     <div class="col-6">
         <div class="background">
@@ -19,9 +25,9 @@
             <div class="list-group">
                 {% for id, title in listOfPublications.items() %}
                     {% if id != '_links' %}
-                    <a class="list-group-item list-group-item-action"
-                       href="https://web.company.com/details?token={{ listToken }}
-                    &uid={{ uid }}&pid={{ id }}">{{loop.index}}. {{ title }}</a>
+                        <a class="list-group-item list-group-item-action"
+                           href="https://web.company.com/details?token={{ listToken }}
+                    &uid={{ uid }}&pid={{ id }}">{{ loop.index }}. {{ title }}</a>
                     {% endif %}
                 {% endfor %}
             </div>

@@ -20,7 +20,6 @@ class RedisHandler:
         objToStore = json.dumps(obj)
         self.redisConnection.hset(uid, pid, objToStore)
 
-
     def getList(self, uid):
         data = self.redisConnection.hgetall(uid)
         listData = {}
@@ -35,5 +34,11 @@ class RedisHandler:
 
     def deleteData(self, uid, pubID):
         self.redisConnection.hdel(uid, pubID)
+
+    def deleteData(self, uid, pubID):
+        self.redisConnection.hdel(uid, pubID)
+
+    def postMessage(self, uid, message):
+        self.redisConnection.publish(uid, message)
 
 

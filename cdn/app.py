@@ -116,6 +116,7 @@ def pubUpload():
             if file.filename != "":
                 file.save('/tmp/' + uid + '/' + pid + '/' + file.filename)
                 file.close()
+    redisConn.postMessage(uid, title)
     return make_response("uploadedPublication", 200)
 
 

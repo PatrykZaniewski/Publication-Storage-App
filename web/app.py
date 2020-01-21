@@ -3,6 +3,7 @@ from flask import request
 from flask import make_response
 from flask import render_template
 from flask import session as se
+from flask import Response
 from dotenv import load_dotenv
 from os import getenv
 import datetime
@@ -12,6 +13,8 @@ import redis
 import jwt
 import requests
 import json
+import hashlib
+import os
 
 load_dotenv(verbose=True)
 
@@ -31,6 +34,8 @@ session = sessionHandler.SessionHandler(redis)
 
 @app.route('/')
 def index():
+    redisConn.checkLogin("dsadasd")
+    redisConn.checkLogin("test")
     session_id = request.cookies.get('session_id')
     if session_id is None:
         return redirect("/login")
@@ -65,6 +70,15 @@ def welcome():
             return response
     return redirect("/login")
 
+@app.route('/stream')
+def stream():
+    name = session.getNicknameSession(request.cookies.get('session_id'))
+    def event_stream(name):
+        pubsub = redis.pubsub(ignore_subscribe_messages=True)
+        pubsub.subscribe(name)
+        for message in pubsub.listen():
+            yield 'data: %s\n\n' % message['data']
+    return Response(event_stream(name), mimetype="text/event-stream")
 
 @app.route('/details')
 def detailsPublication():
@@ -138,15 +152,16 @@ def editPublicationExecutive():
 
 @app.route('/auth', methods=['POST'])
 def auth():
-    username = request.form.get('username')
-    password = request.form.get('password')
+    data = request.json
+    username = data['username']
+    password = data['password']
     if username is not "" and password is not "":
-        response = make_response('', 303)
         if redisConn.checkUser(username, password) is True:
+            response = make_response('', 200)
             session_id = session.createSession(username)
-            response.set_cookie("session_id", session_id, max_age=SESSION_TIME, httponly=True)
-            response.headers["Location"] = "/index"
+            response.set_cookie("session_id", session_id, max_age=SESSION_TIME, httponly=True, secure=True)
         else:
+            response = make_response('', 404)
             response.set_cookie("session_id", "INVALIDATE", max_age=1)
             response.headers["Location"] = "/login"
         return response

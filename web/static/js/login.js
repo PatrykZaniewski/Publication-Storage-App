@@ -4,22 +4,37 @@ var sendButton;
 function afterLoad() {
     sendButton = document.getElementById("sendButton")
     sendButton.addEventListener("click", checkData);
-    errorLoginData()
+    loggedOut()
 }
 
-function errorLoginData() {
+function loggedOut() {
     var cookieValue = document.cookie.split('=')[1];
-    if (cookieValue == "INVALIDATE" || cookieValue == "LOGGED_OUT") {
+    if (cookieValue === "LOGGED_OUT") {
         messageLogin(cookieValue);
     }
 }
 
 function checkData() {
     let inputs = document.querySelectorAll(".fieldInput");
-    if (inputs[0].value.length == 0 || inputs[1].value.length == 0) {
+    if (inputs[0].value.length === 0 || inputs[1].value.length === 0) {
         messageLogin("EMPTY");
-        event.preventDefault();
+        return null;
     }
+    let xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function () {
+        if (this.status === 200) {
+            window.location.href = "https://web.company.com/index";
+        } else if (this.status === 404) {
+            messageLogin("INVALIDATE")
+        } else {
+            messageLogin("OTHER")
+        }
+    };
+
+    xhttp.open("POST", "auth", false);
+    xhttp.setRequestHeader("Content-Type", "application/json");
+    xhttp.send(JSON.stringify({"username": inputs[0].value, "password": inputs[1].value}));
 }
 
 function messageLogin(type) {
@@ -40,6 +55,10 @@ function messageLogin(type) {
         case "LOGGED_OUT":
             child.setAttribute("class", "info");
             child.innerHTML = "<br>Wylogowano poprawnie!";
+            break;
+        case "Other":
+            child.setAttribute("class", "error");
+            child.innerHTML = "<br>Wystąpił błąd logowania! Spróbuj później.";
             break;
     }
     parent.appendChild(child);
