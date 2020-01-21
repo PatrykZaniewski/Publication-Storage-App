@@ -80,6 +80,17 @@ def stream():
             yield 'data: %s\n\n' % message['data']
     return Response(event_stream(name), mimetype="text/event-stream")
 
+@app.route('/register')
+def register():
+    return render_template("register.html")
+
+@app.route('/checklogin/<login>')
+def checkLogin(login):
+    if redisConn.checkLogin(login):
+        return make_response("Login exists", 200)
+    return make_response("Login free", 404)
+
+
 @app.route('/details')
 def detailsPublication():
     uid = request.args.get('uid')
@@ -156,7 +167,7 @@ def auth():
     username = data['username']
     password = data['password']
     if username is not "" and password is not "":
-        if redisConn.checkUser(username, password) is True:
+        if redisConn.login(username, password) is True:
             response = make_response('', 200)
             session_id = session.createSession(username)
             response.set_cookie("session_id", session_id, max_age=SESSION_TIME, httponly=True, secure=True)
@@ -283,7 +294,7 @@ def createDeleteToken(uid):
     exp = datetime.datetime.utcnow() + datetime.timedelta(seconds=JWT_SESSION_TIME)
     return jwt.encode({"iss": "web.company.com", "exp": exp, "uid": uid, "action": "delete"}, JWT_SECRET, "HS256")
 
-
+#TODO dodac do tokenow id plikow
 def createEditToken(uid):
     exp = datetime.datetime.utcnow() + datetime.timedelta(seconds=JWT_SESSION_TIME)
     return jwt.encode({"iss": "web.company.com", "exp": exp, "uid": uid, "action": "edit"}, JWT_SECRET, "HS256")
