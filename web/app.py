@@ -86,6 +86,16 @@ def register():
 
 @app.route('/checklogin/<login>')
 def checkLogin(login):
+    print("XDDDDDD", flush=True)
+    if redisConn.checkLogin(login):
+        return make_response("Login exists", 200)
+    return make_response("Login free", 404)
+
+
+@app.route('/registeruser')
+def checkLogin(login):
+    #TODO konieczne sprawdzanie loginu raz jeszcze !!!
+    print("XDDDDDD", flush=True)
     if redisConn.checkLogin(login):
         return make_response("Login exists", 200)
     return make_response("Login free", 404)
