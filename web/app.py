@@ -80,21 +80,22 @@ def stream():
             yield 'data: %s\n\n' % message['data']
     return Response(event_stream(name), mimetype="text/event-stream")
 
+
 @app.route('/register')
 def register():
     return render_template("register.html")
 
-@app.route('/checklogin/<login>')
-def checkLogin(login):
-    print("XDDDDDD", flush=True)
-    if redisConn.checkLogin(login):
-        return make_response("Login exists", 200)
-    return make_response("Login free", 404)
-
 
 @app.route('/registeruser')
+def registeruser():
+    token = request.form.get('token')
+    author = request.form.get('author')
+    publisher = request.form.get('publisher')
+    return render_template("register.html")
+
+
+@app.route('/checklogin/<login>')
 def checkLogin(login):
-    #TODO konieczne sprawdzanie loginu raz jeszcze !!!
     print("XDDDDDD", flush=True)
     if redisConn.checkLogin(login):
         return make_response("Login exists", 200)

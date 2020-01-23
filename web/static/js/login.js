@@ -7,13 +7,6 @@ function afterLoad() {
     loggedOut()
 }
 
-function loggedOut() {
-    var cookieValue = document.cookie.split('=')[1];
-    if (cookieValue === "LOGGED_OUT") {
-        messageLogin(cookieValue);
-    }
-}
-
 function checkData() {
     let inputs = document.querySelectorAll(".fieldInput");
     if (inputs[0].value.length === 0 || inputs[1].value.length === 0) {
@@ -51,10 +44,6 @@ function messageLogin(type) {
         case "INVALIDATE":
             child.setAttribute("class", "error");
             child.innerHTML = "<br>Wprowadzono nieprawidłowy login i/lub hasło!";
-            break;
-        case "LOGGED_OUT":
-            child.setAttribute("class", "info");
-            child.innerHTML = "<br>Wylogowano poprawnie!";
             break;
         case "Other":
             child.setAttribute("class", "error");
