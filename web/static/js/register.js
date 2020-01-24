@@ -1,5 +1,5 @@
 window.addEventListener("load", afterLoad);
-var login, password, passwordRepeat;
+var login, password, passwordRepeat, loginCorrect = false;
 
 function afterLoad() {
     let button = document.getElementById("registerButton");
@@ -11,77 +11,127 @@ function afterLoad() {
     passwordRepeat = document.getElementById("passwordRepeat");
     passwordRepeat.addEventListener("keyup", checkPassword);
 }
-//TODO entropia
-//TODO sprawdzanie 2 hasel
+
 
 function checkLoginAvailable() {
-    //TODO może jakieś regexy?
-    //TODO jakieś czasy narzucić + komunikat?
-    if (login.value.length >= 3) {
+    let regex = /^[a-zA-Z0-9]*$/;
+    if (document.getElementById("labelLogin").childElementCount > 0) {
+        document.getElementById("labelLogin").removeChild(document.getElementById("loginAvailable"));
+    }
+    let parent = document.getElementById("labelLogin");
+    let child = document.createElement("label");
+    child.setAttribute("id", "loginAvailable");
+    if (login.value.length >= 3 && login.value.match(regex)) {
         let xhttp = new XMLHttpRequest();
         xhttp.overrideMimeType('text/xml');
         xhttp.onreadystatechange = function () {
-            if (this.status === 200 && this.readyState === 4) {
+            if (this.status === 200) {
+                child.innerHTML = "Login zajęty!";
+                parent.appendChild(child);
                 document.getElementById("login").style.background = "red";
-            } else {
+                loginCorrect = false;
+            } else if (this.status === 404) {
+                child.innerHTML = "Login dostępny!";
+                parent.appendChild(child);
                 document.getElementById("login").style.background = "greenyellow";
+                loginCorrect = true;
             }
         };
         xhttp.open("GET", "/checklogin/" + login.value, true);
         xhttp.send();
-    }
-    else
-    {
-        document.getElementById("login").style.background = null;
+    } else {
+        child.innerHTML = "Login nie spełnia wymogów - co  najmniej 3 znaki ze zbioru [a-zA-Z0-9]!";
+        parent.appendChild(child);
+        document.getElementById("login").style.background = "red";
+        loginCorrect = false;
     }
 }
 
-function checkPassword(){
-    console.log(checkPasswordEquality(), " ", checkPasswordEquality());
+function checkPassword() {
+    if (document.getElementById("labelPassword").childElementCount > 0) {
+        document.getElementById("labelPassword").removeChild(document.getElementById("passwordComplex"));
+    }
+    if (document.getElementById("labelRepeatPassword").childElementCount > 0) {
+        document.getElementById("labelRepeatPassword").removeChild(document.getElementById("passwordEquality"));
+    }
     if (checkPasswordComplex() && checkPasswordEquality()){
-        //document.getElementById("passwordRepeat").style.background = "greenyellow";
-        //document.getElementById("password").style.background = "greenyellow";
+        return true
     }
+    return false;
+
 }
 
-function checkPasswordEquality(){
-    if (passwordRepeat.value === password.value){
+function checkPasswordEquality() {
+    if (passwordRepeat.value === password.value) {
         document.getElementById("passwordRepeat").style.background = null;
         return true;
     }
     document.getElementById("passwordRepeat").style.background = "red";
-    document.getElementById("password").style.background = "red";
+
+    let parent = document.getElementById("labelRepeatPassword");
+    let child = document.createElement("label");
+    child.setAttribute("id", "passwordEquality");
+    child.innerHTML = "Wpisane hasła są różne";
+    parent.appendChild(child);
+
     return false;
 }
 
 function checkPasswordComplex() {
-    let countArray = {}, letterAmount = 0, result = 0;
-    for (let letter of password.value.split('')){
-        countArray[letter] ? countArray[letter]++ : countArray[letter] = 1;
-        letterAmount++;
-    }
+    let regex = /^[a-zA-Z0-9!@#$%^&]*$/;
+    if (password.value.match(regex) && password.value.length >= 6) {
+        let countArray = {}, letterAmount = 0, result = 0;
+        for (let letter of password.value.split('')) {
+            countArray[letter] ? countArray[letter]++ : countArray[letter] = 1;
+            letterAmount++;
+        }
 
-    for (let letter in countArray)
-    {
-        result += countArray[letter]/letterAmount * Math.log2(countArray[letter]/letterAmount)
+        for (let letter in countArray) {
+            result += countArray[letter] / letterAmount * Math.log2(countArray[letter] / letterAmount)
+        }
+        result *= -1;
+        console.log(result);
+        if (result < 2) {
+            passwordNotification(2)
+        } else if (result >= 2 && result < 3) {
+            passwordNotification(1)
+        } else {
+            passwordNotification(0)
+        }
+        return result >= 2;
     }
-    result *= -1;
-    if(result < 2)
-    {
-        document.getElementById("password").style.background = "red";
+    passwordNotification(3);
+    return false;
+}
+
+function passwordNotification(code) {
+    let parent = document.getElementById("labelPassword");
+    let child = document.createElement("label");
+    child.setAttribute("id", "passwordComplex");
+    switch (code) {
+        case 3:
+            child.innerHTML = "Hasło nie spełnia wymogów - co najmniej 6 znaków ze zbioru [a-zA-Z0-9!@#$%^&]";
+            document.getElementById("password").style.background = "red";
+            break;
+        case 2:
+            child.innerHTML = "Słabe hasło - wpisz mocniejsze";
+            document.getElementById("password").style.background = "red";
+            break;
+        case 1:
+            child.innerHTML = "Średnie hasło";
+            document.getElementById("password").style.background = "yellow";
+            break;
+        case 0:
+            child.innerHTML = "Mocne hasło";
+            document.getElementById("password").style.background = "greenyellow";
+            break;
     }
-    else if(result >= 2 && result < 3){
-        document.getElementById("password").style.background = "yellow";
-    }
-    else
-    {
-        document.getElementById("password").style.background = "greenyellow";
-    }
-    return result >= 2;
+    parent.appendChild(child);
 }
 
 
-
 function register(e) {
-    e.preventDefault();
+    if(loginCorrect === false || checkPassword() === false) {
+        e.preventDefault();
+    }
 }

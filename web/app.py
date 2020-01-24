@@ -86,17 +86,21 @@ def register():
     return render_template("register.html")
 
 
-@app.route('/registeruser')
+@app.route('/registeruser', methods=['POST'])
 def registeruser():
-    token = request.form.get('token')
-    author = request.form.get('author')
-    publisher = request.form.get('publisher')
+    newLogin = request.form.get('login')
+    password = request.form.get('password')
+    repeatPassword = request.form.get('passwordRepeat')
+    req = requests.get("http://web:5000/registeruser/" + newLogin)
+    if (req.status_code == 404):
+        x =2
+    else
+    print(newLogin, flush=True)
     return render_template("register.html")
 
 
 @app.route('/checklogin/<login>')
 def checkLogin(login):
-    print("XDDDDDD", flush=True)
     if redisConn.checkLogin(login):
         return make_response("Login exists", 200)
     return make_response("Login free", 404)
