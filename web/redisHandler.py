@@ -35,7 +35,7 @@ class RedisHandler:
     def getAllUsers(self):
         return self.redisConnection.hkey('account')
 
-    def login(self, login, passwordToCheck):
+    def checkCrudentials(self, login, passwordToCheck):
         if self.redisConnection.hget('account', login) is None:
             return False
         password = bytes.fromhex(self.redisConnection.hget('account', login))

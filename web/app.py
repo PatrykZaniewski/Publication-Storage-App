@@ -13,6 +13,7 @@ import redis
 import jwt
 import requests
 import json
+import re
 import hashlib
 import os
 
@@ -66,37 +67,84 @@ def welcome():
                                    listOfPublications=listOfPublications, message=message)
         else:
             response = redirect("/login")
-            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
+            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True)
             return response
     return redirect("/login")
+
 
 @app.route('/stream')
 def stream():
     name = session.getNicknameSession(request.cookies.get('session_id'))
+
     def event_stream(name):
         pubsub = redis.pubsub(ignore_subscribe_messages=True)
         pubsub.subscribe(name)
         for message in pubsub.listen():
             yield 'data: %s\n\n' % message['data']
+
     return Response(event_stream(name), mimetype="text/event-stream")
 
 
 @app.route('/register')
 def register():
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            return redirect("/index")
     return render_template("register.html")
+
+
+@app.route('/changepassword')
+def changepassword():
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            return render_template("changepassword.html")
+    return redirect("/login.html")
+
+
+@app.route('/changepassworduser', methods=['POST'])
+def changepassworduser():
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            uid = session.getNicknameSession(session_id)
+            oldPassword = request.form.get('oldPassword')
+            newPassword = request.form.get('newPassword')
+            newPasswordRepeat = request.form.get('newPasswordRepeat')
+            if re.match("^[a-zA-Z0-9]*$", oldPassword) and re.match("^[a-zA-Z0-9!@#$%^&]*$", newPassword) and re.match(
+                    "^[a-zA-Z0-9!@#$%^&]*$", newPasswordRepeat):
+                if len(newPassword) > 5:
+                    if newPassword == newPasswordRepeat:
+                        if redisConn.checkCrudentials(uid, oldPassword):
+                            redisConn.createUser(uid, newPassword)
+                            # TODO Koniecznie komunikaty trzeba tymi errorami zastapic!!!
+                            return redirectCallback("changedPassword")
+                        return make_response("Invalid old password", 400)
+                    return make_response("Typed new passwords are not same", 400)
+                return make_response("New password too short", 400)
+            return make_response("Incorrect characters in password/s", 400)
+    return redirect("/login.html")
 
 
 @app.route('/registeruser', methods=['POST'])
 def registeruser():
     newLogin = request.form.get('login')
     password = request.form.get('password')
-    repeatPassword = request.form.get('passwordRepeat')
-    req = requests.get("http://web:5000/registeruser/" + newLogin)
-    if (req.status_code == 404):
-        x =2
-    else
-    print(newLogin, flush=True)
-    return render_template("register.html")
+    passwordRepeat = request.form.get('passwordRepeat')
+    if re.match("^[a-zA-Z0-9]*$", newLogin) and re.match("^[a-zA-Z0-9!@#$%^&]*$", password) and re.match(
+            "^[a-zA-Z0-9!@#$%^&]*$", passwordRepeat):
+        if len(newLogin) > 2 and len(password) > 5:
+            if password == passwordRepeat:
+                req = requests.get("http://web:5000/checklogin/" + newLogin)
+                if req.status_code == 404:
+                    redisConn.createUser(newLogin, password)
+                    # TODO może jakis komunikat jak da rade?
+                    return render_template("login.html")
+                return make_response("Typed login already exists", 400)
+            return make_response("Typed passwords are not same", 400)
+        return make_response("Login/password too short", 400)
+    return make_response("Incorrect characters in login/password", 400)
 
 
 @app.route('/checklogin/<login>')
@@ -130,7 +178,7 @@ def detailsPublication():
                                    publication=json.loads(publication), files=json.loads(files))
         else:
             response = redirect("/login")
-            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
+            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True)
             return response
     return redirect("/login")
 
@@ -153,13 +201,14 @@ def editPublication():
                                    publication=json.loads(publication))
         else:
             response = redirect("/login")
-            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
+            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True)
             return response
     return redirect("/login")
 
 
 @app.route('/editpublication', methods=['POST'])
 def editPublicationExecutive():
+    # TODO nad tym trzeba pomyslec zeby to jakos zablokowac. Moze dodanie tego ciastka!!!
     token = request.form.get('token')
     author = request.form.get('author')
     publisher = request.form.get('publisher')
@@ -182,13 +231,14 @@ def auth():
     username = data['username']
     password = data['password']
     if username is not "" and password is not "":
-        if redisConn.login(username, password) is True:
+        if redisConn.checkCrudentials(username, password) is True:
             response = make_response('', 200)
             session_id = session.createSession(username)
-            response.set_cookie("session_id", session_id, max_age=SESSION_TIME, httponly=True, secure=True)
+            response.set_cookie("session_id", session_id, max_age=SESSION_TIME, httponly=True, secure=True,
+                                samesite='Strict')
         else:
             response = make_response('', 404)
-            response.set_cookie("session_id", "INVALIDATE", max_age=1)
+            response.set_cookie("session_id", "INVALIDATE", max_age=1, httponly=True, secure=True)
             response.headers["Location"] = "/login"
         return response
     return redirect("/login")
@@ -200,7 +250,7 @@ def logout():
     if session_id:
         session.deleteSession(session_id)
         response = redirect("/login")
-        response.set_cookie("session_id", "LOGGED_OUT", max_age=1)
+        response.set_cookie("session_id", "LOGGED_OUT", max_age=1, httponly=True, secure=True)
         return response
     return redirect("/login")
 
@@ -215,7 +265,7 @@ def addPublication():
             return render_template("add.html", uid=uid, uploadToken=uploadToken)
         else:
             response = redirect("/login")
-            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE)
+            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True)
             return response
     return redirect("/login")
 
@@ -281,6 +331,7 @@ def redirectCallback(error):
 
 @app.route('/callback')
 def callback():
+    # TODO tutaj trzeba przykombinować z powiadomieniami
     session_id = request.cookies.get('session_id')
     err = request.args.get('error')
     if session_id:
@@ -309,7 +360,8 @@ def createDeleteToken(uid):
     exp = datetime.datetime.utcnow() + datetime.timedelta(seconds=JWT_SESSION_TIME)
     return jwt.encode({"iss": "web.company.com", "exp": exp, "uid": uid, "action": "delete"}, JWT_SECRET, "HS256")
 
-#TODO dodac do tokenow id plikow
+
+# TODO dodac do tokenow id plikow
 def createEditToken(uid):
     exp = datetime.datetime.utcnow() + datetime.timedelta(seconds=JWT_SESSION_TIME)
     return jwt.encode({"iss": "web.company.com", "exp": exp, "uid": uid, "action": "edit"}, JWT_SECRET, "HS256")
@@ -343,4 +395,6 @@ def createFileMessage(err):
         message = f'<div class="info">Publikacja zaktualizowana!</div>'
     elif err == "deletedFile":
         message = f'<div class="info">Plik usunięto!</div>'
+    elif err == "changedPassword":
+        message = f'<div class="info">Hasło zmieniono!</div>'
     return message
