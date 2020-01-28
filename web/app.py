@@ -54,11 +54,11 @@ def login():
 
 @app.route('/index')
 def welcome():
-    err = se.get('err')
-    se['err'] = ''
     session_id = request.cookies.get('session_id')
     if session_id:
         if session.checkSession(session_id):
+            err = se.get('err')
+            se['err'] = ''
             message = createFileMessage(err)
             uid = session.getNicknameSession(session_id)
             listToken = createListToken(uid).decode('utf-8')
@@ -72,19 +72,21 @@ def welcome():
             return response
     return redirect("/login")
 
-
 @app.route('/stream')
 def stream():
-    name = session.getNicknameSession(request.cookies.get('session_id'))
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            name = session.getNicknameSession(request.cookies.get('session_id'))
 
-    def event_stream(name):
-        pubsub = redis.pubsub(ignore_subscribe_messages=True)
-        pubsub.subscribe(name)
-        for message in pubsub.listen():
-            yield 'data: %s\n\n' % message['data']
+            def event_stream(name):
+                pubsub = redis.pubsub(ignore_subscribe_messages=True)
+                pubsub.subscribe(name)
+                for message in pubsub.listen():
+                    yield 'data: %s\n\n' % message['data']
 
-    return Response(event_stream(name), mimetype="text/event-stream")
-
+            return Response(event_stream(name), mimetype="text/event-stream")
+    return redirect("/login")
 
 @app.route('/register')
 def register():
@@ -100,7 +102,10 @@ def changepassword():
     session_id = request.cookies.get('session_id')
     if session_id:
         if session.checkSession(session_id):
-            return render_template("changepassword.html")
+            err = se.get('err')
+            se['err'] = ''
+            message = createFileMessage(err)
+            return render_template("changepassword.html", message=message)
     return redirect("/login")
 
 
@@ -113,14 +118,14 @@ def changepassworduser():
             oldPassword = request.form.get('oldPassword')
             newPassword = request.form.get('newPassword')
             newPasswordRepeat = request.form.get('newPasswordRepeat')
-            if re.match("^[a-zA-Z0-9]*$", oldPassword) and re.match("^[a-zA-Z0-9!@#$%^&]*$", newPassword) and re.match(
+            if re.match("^[a-zA-Z0-9!@#$%^&]*$", oldPassword) and re.match("^[a-zA-Z0-9!@#$%^&]*$", newPassword) and re.match(
                     "^[a-zA-Z0-9!@#$%^&]*$", newPasswordRepeat):
                 if len(newPassword) > 5:
                     if newPassword == newPasswordRepeat:
                         if redisConn.checkCrudentials(uid, oldPassword):
                             redisConn.createUser(uid, newPassword)
                             return redirectCallback("changedPassword")
-                        return make_response("Invalid old password", 400)
+                        return redirectCallback("wrongPasswordChange", "/changepassword")
                     return make_response("Typed new passwords are not same", 400)
                 return make_response("New password too short", 400)
             return make_response("Incorrect characters in password/s", 400)
@@ -128,6 +133,7 @@ def changepassworduser():
 
 @app.route('/auth', methods=['POST'])
 def auth():
+    #TODO w auth polaczyc znowu js z html
     time.sleep(randrange(10)/10)
     data = request.json
     username = data['username']
@@ -159,7 +165,7 @@ def registeruser():
                 if req.status_code == 404:
                     redisConn.createUser(newLogin, password)
                     # TODO może jakis komunikat jak da rade?
-                    return render_template("login.html")
+                    return redirect("/login")
                 return make_response("Typed login already exists", 400)
             return make_response("Typed passwords are not same", 400)
         return make_response("Login/password too short", 400)
@@ -175,13 +181,12 @@ def checkLogin(login):
 
 @app.route('/details')
 def detailsPublication():
-    uid = request.args.get('uid')
-    pid = request.args.get('pid')
-    token = request.args.get('token')
-
     session_id = request.cookies.get('session_id')
     if session_id:
         if session.checkSession(session_id):
+            uid = request.args.get('uid')
+            pid = request.args.get('pid')
+            token = request.args.get('token')
             req = requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token)
             if req.status_code != requests.codes.ok:
                 return redirectCallback(req.text)
@@ -205,12 +210,12 @@ def detailsPublication():
 
 @app.route('/edit')
 def editPublication():
-    uid = request.args.get('uid')
-    pid = request.args.get('pid')
-    token = request.args.get('token')
     session_id = request.cookies.get('session_id')
     if session_id:
         if session.checkSession(session_id):
+            uid = request.args.get('uid')
+            pid = request.args.get('pid')
+            token = request.args.get('token')
             req = requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token)
             if req.status_code != requests.codes.ok:
                 return redirectCallback(req.text)
@@ -229,21 +234,24 @@ def editPublication():
 
 @app.route('/editpublication', methods=['POST'])
 def editPublicationExecutive():
-    # TODO nad tym trzeba pomyslec zeby to jakos zablokowac. Moze dodanie tego ciastka!!!
-    token = request.form.get('token')
-    author = request.form.get('author')
-    publisher = request.form.get('publisher')
-    title = request.form.get('title')
-    date = request.form.get('publishDate')
-    pid = request.form.get('pid')
-    uid = request.form.get('uid')
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            token = request.form.get('token')
+            author = request.form.get('author')
+            publisher = request.form.get('publisher')
+            title = request.form.get('title')
+            date = request.form.get('publishDate')
+            pid = request.form.get('pid')
+            uid = request.form.get('uid')
 
-    objToSend = {'author': author, 'publisher': publisher, 'title': title, 'publishDate': date, 'uid': uid,
-                 'token': token}
+            objToSend = {'author': author, 'publisher': publisher, 'title': title, 'publishDate': date, 'uid': uid,
+                        'token': token}
 
-    req = requests.post("http://cdn:5000/updlist/" + uid + "/" + pid, data=objToSend)
+            req = requests.post("http://cdn:5000/updlist/" + uid + "/" + pid, data=objToSend)
 
-    return redirectCallback(req.text)
+            return redirectCallback(req.text)
+    return redirect("/login")
 
 
 
@@ -277,73 +285,89 @@ def addPublication():
 
 @app.route('/addfiles', methods=['POST'])
 def addFilesExecutive():
-    token = request.form.get('token')
-    uid = request.form.get('uid')
-    pid = request.form.get('pid')
-    files = request.files.getlist('files')
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            token = request.form.get('token')
+            uid = request.form.get('uid')
+            pid = request.form.get('pid')
+            files = request.files.getlist('files')
 
-    files = [('files', (f.filename, f.read())) for f in files]
+            files = [('files', (f.filename, f.read())) for f in files]
 
-    req = requests.post("http://cdn:5000/files/" + uid + "/" + pid + "?token=" + token, files=files)
-    return redirectCallback(req.text)
+            req = requests.post("http://cdn:5000/files/" + uid + "/" + pid + "?token=" + token, files=files)
+            return redirectCallback(req.text)
+    return redirect("/login")
 
 
 @app.route('/addpublication', methods=['POST'])
 def addPubExecutive():
-    token = request.form.get('token')
-    author = request.form.get('author')
-    publisher = request.form.get('publisher')
-    title = request.form.get('title')
-    date = request.form.get('publishDate')
-    uid = request.form.get('uid')
-    files = request.files.getlist('files')
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            token = request.form.get('token')
+            author = request.form.get('author')
+            publisher = request.form.get('publisher')
+            title = request.form.get('title')
+            date = request.form.get('publishDate')
+            uid = request.form.get('uid')
+            files = request.files.getlist('files')
 
-    objToSend = {'author': author, 'publisher': publisher, 'title': title, 'publishDate': date, 'uid': uid,
-                 'token': token}
-    files = [('files', (f.filename, f.read())) for f in files]
+            objToSend = {'author': author, 'publisher': publisher, 'title': title, 'publishDate': date, 'uid': uid,
+                        'token': token}
+            files = [('files', (f.filename, f.read())) for f in files]
 
-    req = requests.post("http://cdn:5000/list", data=objToSend, files=files)
-    return redirectCallback(req.text)
+            req = requests.post("http://cdn:5000/list", data=objToSend, files=files)
+            return redirectCallback(req.text)
+    return redirect("/login")
 
 
 @app.route('/deletepublication', methods=['POST'])
 def delPubExecutive():
-    token = request.form.get('token')
-    uid = request.form.get('uid')
-    pid = request.form.get('pid')
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            token = request.form.get('token')
+            uid = request.form.get('uid')
+            pid = request.form.get('pid')
 
-    req = requests.post("http://cdn:5000/dellist/" + uid + "/" + pid + "?token=" + token)
-    return redirectCallback(req.text)
+            req = requests.post("http://cdn:5000/dellist/" + uid + "/" + pid + "?token=" + token)
+            return redirectCallback(req.text)
+    return redirect("/login")
 
 
 @app.route('/deletefile', methods=['POST'])
 def delFileExecutive():
-    token = request.form.get('token')
-    uid = request.form.get('uid')
-    pid = request.form.get('pid')
-    filename = request.form.get('filename')
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            token = request.form.get('token')
+            uid = request.form.get('uid')
+            pid = request.form.get('pid')
+            filename = request.form.get('filename')
 
-    req = requests.post("http://cdn:5000/delfiles/" + uid + "/" + pid + "?token=" + token + "&filename=" + filename)
-    return redirectCallback(req.text)
+            req = requests.post("http://cdn:5000/delfiles/" + uid + "/" + pid + "?token=" + token + "&filename=" + filename)
+            return redirectCallback(req.text)
+    return redirect("/login")
 
-
-def redirectCallback(error):
+def redirectCallback(error, dst = "/index"):
     response = make_response("", 303)
-    response.headers["Location"] = "https://web.company.com/callback?error=" + error
+    response.headers["Location"] = "https://web.company.com/callback?error=" + error + "&dst=" + dst
     response.headers["Content-Type"] = "multipart/form-data"
     return response
 
 
 @app.route('/callback')
 def callback():
-    # TODO tutaj trzeba przykombinować z powiadomieniami
     session_id = request.cookies.get('session_id')
-    err = request.args.get('error')
     if session_id:
         if session.checkSession(session_id):
+            err = request.args.get('error')
+            dst = request.args.get('dst')
             se['err'] = err
+            return redirect(dst)
 
-    return redirect('/login')
+    return redirect("/login")
 
 
 def createDownloadToken(uid):
@@ -402,4 +426,6 @@ def createFileMessage(err):
         message = f'<div class="info">Plik usunięto!</div>'
     elif err == "changedPassword":
         message = f'<div class="info">Hasło zmieniono!</div>'
+    elif err == "wrongPasswordChange":
+        message = f'<div class="error">Nieprawidłowe aktualne hasło!</div>'
     return message

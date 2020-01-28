@@ -12,14 +12,13 @@ function afterLoad() {
     passwordRepeat.addEventListener("keyup", checkPassword);
 }
 
-
 function checkLoginAvailable() {
     let regex = /^[a-zA-Z0-9]*$/;
     if (document.getElementById("labelLogin").childElementCount > 0) {
         document.getElementById("labelLogin").removeChild(document.getElementById("loginAvailable"));
     }
     let parent = document.getElementById("labelLogin");
-    let child = document.createElement("label");
+    let child = document.createElement("div");
     child.setAttribute("id", "loginAvailable");
     if (login.value.length >= 3 && login.value.match(regex)) {
         let xhttp = new XMLHttpRequest();
@@ -54,7 +53,7 @@ function checkPassword() {
     if (document.getElementById("labelRepeatPassword").childElementCount > 0) {
         document.getElementById("labelRepeatPassword").removeChild(document.getElementById("passwordEquality"));
     }
-    if (checkPasswordComplex() && checkPasswordEquality()){
+    if (checkPasswordComplex() && checkPasswordEquality()) {
         return true
     }
     return false;
@@ -69,7 +68,7 @@ function checkPasswordEquality() {
     document.getElementById("passwordRepeat").style.background = "red";
 
     let parent = document.getElementById("labelRepeatPassword");
-    let child = document.createElement("label");
+    let child = document.createElement("div");
     child.setAttribute("id", "passwordEquality");
     child.innerHTML = "Wpisane hasła są różne";
     parent.appendChild(child);
@@ -106,7 +105,7 @@ function checkPasswordComplex() {
 
 function passwordNotification(code) {
     let parent = document.getElementById("labelPassword");
-    let child = document.createElement("label");
+    let child = document.createElement("div");
     child.setAttribute("id", "passwordComplex");
     switch (code) {
         case 3:
@@ -129,9 +128,17 @@ function passwordNotification(code) {
     parent.appendChild(child);
 }
 
-
 function register(e) {
-    if(loginCorrect === false || checkPassword() === false) {
+    if (loginCorrect === false || checkPassword() === false) {
         e.preventDefault();
+        if (document.getElementById("title").childElementCount > 0) {
+            document.getElementById("title").removeChild(document.getElementById("generalError"));
+        }
+        let parent = document.getElementById("title");
+        let child = document.createElement("div");
+        child.setAttribute("id", "generalError");
+        child.innerHTML = "Nie wypełniono wszystkich pól!";
+        child.style.color = "red";
+        parent.appendChild(child);
     }
 }

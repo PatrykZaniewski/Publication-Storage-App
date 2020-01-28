@@ -1,4 +1,17 @@
-window.addEventListener("load", messageHandler);
+window.addEventListener("load", afterLoad);
+var newPassword, newPasswordRepeat, loginCorrect = false;
+//TODO porobić regexy i zrobić callback
+function afterLoad() {
+    /*let button = document.getElementById("registerButton");
+    button.addEventListener("click", e => register(e));
+    oldPassword = document.getElementById("oldPassword");
+    oldPassword.addEventListener("keyup", checkPassword);
+    newPassword = document.getElementById("newPassword");
+    newPassword.addEventListener("keyup", checkPassword);
+    newPasswordRepeat = document.getElementById("newPasswordRepeat");
+    newPasswordRepeat.addEventListener("keyup", checkPassword);*/
+    messageHandler();
+}
 
 function messageHandler() {
     var source = new EventSource('/stream');
