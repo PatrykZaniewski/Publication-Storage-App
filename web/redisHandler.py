@@ -1,6 +1,8 @@
 import redis
 import hashlib
 import os
+import json
+
 
 
 class RedisHandler:
@@ -8,6 +10,7 @@ class RedisHandler:
         self.redisConnection = redisConnection
 
     def initUser(self):
+        self.redisConnection.set("loginList", json.dumps([]))
         self.createUser("test", "123")
         self.createUser("chaberb", "bardzotajnehaslo")
         self.redisConnection.hset('test', 0, '{"author": "a", "publisher": "b", "title": "c", "publishDate": "d", "pubID": 0}')
@@ -26,6 +29,15 @@ class RedisHandler:
              saltHistory = saltHistory + salt
         self.redisConnection.hset('account', login, password.hex())
         self.redisConnection.hset('accountSalt', login, saltHistory.hex())
+        self.updateLoginList(login)
+
+    def updateLoginList(self, login):
+        loginList = self.redisConnection.get("loginList")
+        loginList = json.dumps(loginList)
+        loginList.__add__(login)
+        self.redisConnection.set("loginList", json.dumps(loginList))
+        print(loginList, "XDDDDDDDDDDDDDDDDD", flush=True)
+
 
     def checkLogin(self, login):
         if self.redisConnection.hget('account', login) is None:

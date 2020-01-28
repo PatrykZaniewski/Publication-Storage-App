@@ -4,7 +4,6 @@ var sendButton;
 function afterLoad() {
     sendButton = document.getElementById("sendButton")
     sendButton.addEventListener("click", checkData);
-    loggedOut()
 }
 
 function checkData() {
@@ -20,7 +19,11 @@ function checkData() {
             window.location.href = "https://web.company.com/index";
         } else if (this.status === 404) {
             messageLogin("INVALIDATE")
-        } else {
+        }
+        else if (this.status === 400){
+            messageLogin("BADDATA")
+        }
+        else {
             messageLogin("OTHER")
         }
     };
@@ -45,7 +48,7 @@ function messageLogin(type) {
             child.setAttribute("class", "error");
             child.innerHTML = "<br>Wprowadzono nieprawidłowy login i/lub hasło!";
             break;
-        case "Other":
+        case "OTHER":
             child.setAttribute("class", "error");
             child.innerHTML = "<br>Wystąpił błąd logowania! Spróbuj później.";
             break;

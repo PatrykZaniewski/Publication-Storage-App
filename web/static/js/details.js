@@ -1,9 +1,10 @@
 window.addEventListener("load", afterLoad);
-var files
+var files;
 
 function afterLoad() {
     files = document.getElementById("files");
-    document.getElementById("submitButton").addEventListener("click", checkFiles)
+    document.getElementById("submitButton").addEventListener("click", checkFiles);
+    messageHandler();
 }
 
 function checkFiles(e){
@@ -21,4 +22,22 @@ function checkFiles(e){
 
         e.preventDefault()
     }
+}
+
+function messageHandler() {
+    var source = new EventSource('/stream');
+    var out;
+    var transmission = false;
+    source.onmessage = function (e) {
+        if (!transmission) {
+            document.getElementById('col-3').innerHTML += '<div class="backgroundNotifications">\n' +
+                '<h2 class="title">Powiadomienia:</h2>\n' +
+                '<div id="notification" class="list-group">\n' +
+                '</div>\n' +
+                '</div>';
+            transmission = true;
+            out = document.getElementById('notification');
+        }
+        out.innerHTML = out.innerHTML + '<div class ="warning">Publikacja o tytule "' + e.data + '" została dodana w innej przeglądarce. Odśwież listę, aby ją zobaczyć.</div>';
+    };
 }

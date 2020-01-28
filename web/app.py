@@ -16,6 +16,8 @@ import json
 import re
 import hashlib
 import os
+import time
+from random import randrange
 
 load_dotenv(verbose=True)
 
@@ -35,8 +37,6 @@ session = sessionHandler.SessionHandler(redis)
 
 @app.route('/')
 def index():
-    redisConn.checkLogin("dsadasd")
-    redisConn.checkLogin("test")
     session_id = request.cookies.get('session_id')
     if session_id is None:
         return redirect("/login")
@@ -67,7 +67,8 @@ def welcome():
                                    listOfPublications=listOfPublications, message=message)
         else:
             response = redirect("/login")
-            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True)
+            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True,
+                                samesite='Strict')
             return response
     return redirect("/login")
 
@@ -100,7 +101,7 @@ def changepassword():
     if session_id:
         if session.checkSession(session_id):
             return render_template("changepassword.html")
-    return redirect("/login.html")
+    return redirect("/login")
 
 
 @app.route('/changepassworduser', methods=['POST'])
@@ -118,14 +119,32 @@ def changepassworduser():
                     if newPassword == newPasswordRepeat:
                         if redisConn.checkCrudentials(uid, oldPassword):
                             redisConn.createUser(uid, newPassword)
-                            # TODO Koniecznie komunikaty trzeba tymi errorami zastapic!!!
                             return redirectCallback("changedPassword")
                         return make_response("Invalid old password", 400)
                     return make_response("Typed new passwords are not same", 400)
                 return make_response("New password too short", 400)
             return make_response("Incorrect characters in password/s", 400)
-    return redirect("/login.html")
+    return redirect("/login")
 
+@app.route('/auth', methods=['POST'])
+def auth():
+    time.sleep(randrange(10)/10)
+    data = request.json
+    username = data['username']
+    password = data['password']
+    if re.match("^[a-zA-Z0-9]*$", username) and re.match("^[a-zA-Z0-9!@#$%^&]*$", password):
+        if username is not "" and password is not "":
+            if redisConn.checkCrudentials(username, password) is True:
+                response = make_response('', 200)
+                session_id = session.createSession(username)
+                response.set_cookie("session_id", session_id, max_age=SESSION_TIME, httponly=True, secure=True, samesite='Strict')
+            else:
+                response = make_response('', 404)
+                response.set_cookie("session_id", "INVALIDATE", max_age=1, httponly=True, secure=True, samesite='Strict')
+                response.headers["Location"] = "/login"
+            return response
+        return redirect("/login")
+    return make_response("Incorrect characters in login/password", 400)
 
 @app.route('/registeruser', methods=['POST'])
 def registeruser():
@@ -178,7 +197,8 @@ def detailsPublication():
                                    publication=json.loads(publication), files=json.loads(files))
         else:
             response = redirect("/login")
-            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True)
+            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True,
+                                samesite='Strict')
             return response
     return redirect("/login")
 
@@ -201,7 +221,8 @@ def editPublication():
                                    publication=json.loads(publication))
         else:
             response = redirect("/login")
-            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True)
+            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True,
+                                samesite='Strict')
             return response
     return redirect("/login")
 
@@ -225,24 +246,6 @@ def editPublicationExecutive():
     return redirectCallback(req.text)
 
 
-@app.route('/auth', methods=['POST'])
-def auth():
-    data = request.json
-    username = data['username']
-    password = data['password']
-    if username is not "" and password is not "":
-        if redisConn.checkCrudentials(username, password) is True:
-            response = make_response('', 200)
-            session_id = session.createSession(username)
-            response.set_cookie("session_id", session_id, max_age=SESSION_TIME, httponly=True, secure=True,
-                                samesite='Strict')
-        else:
-            response = make_response('', 404)
-            response.set_cookie("session_id", "INVALIDATE", max_age=1, httponly=True, secure=True)
-            response.headers["Location"] = "/login"
-        return response
-    return redirect("/login")
-
 
 @app.route('/logout')
 def logout():
@@ -250,7 +253,8 @@ def logout():
     if session_id:
         session.deleteSession(session_id)
         response = redirect("/login")
-        response.set_cookie("session_id", "LOGGED_OUT", max_age=1, httponly=True, secure=True)
+        response.set_cookie("session_id", "LOGGED_OUT", max_age=1, httponly=True, secure=True,
+                                samesite='Strict')
         return response
     return redirect("/login")
 
@@ -265,7 +269,8 @@ def addPublication():
             return render_template("add.html", uid=uid, uploadToken=uploadToken)
         else:
             response = redirect("/login")
-            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True)
+            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True,
+                                samesite='Strict')
             return response
     return redirect("/login")
 
