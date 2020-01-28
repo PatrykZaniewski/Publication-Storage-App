@@ -15,16 +15,16 @@ function checkData() {
     let xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function () {
-        if (this.status === 200) {
-            window.location.href = "https://web.company.com/index";
-        } else if (this.status === 404) {
-            messageLogin("INVALIDATE")
-        }
-        else if (this.status === 400){
-            messageLogin("BADDATA")
-        }
-        else {
-            messageLogin("OTHER")
+        if(this.readyState === 4) {
+            if (this.status === 200) {
+                window.location.href = "https://web.company.com/index";
+            } else if (this.status === 404) {
+                messageLogin("INVALIDATE")
+            } else if (this.status === 400) {
+                messageLogin("BADDATA")
+            } else {
+                messageLogin("OTHER")
+            }
         }
     };
 

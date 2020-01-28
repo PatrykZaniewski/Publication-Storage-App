@@ -10,10 +10,11 @@ class RedisHandler:
         self.redisConnection = redisConnection
 
     def initUser(self):
-        self.redisConnection.set("loginList", json.dumps([]))
+        self.redisConnection.set("loginList", json.dumps({}))
         self.createUser("test", "123")
         self.createUser("chaberb", "bardzotajnehaslo")
-        self.redisConnection.hset('test', 0, '{"author": "a", "publisher": "b", "title": "c", "publishDate": "d", "pubID": 0}')
+        #self.redisConnection.hset('test', 0, '{"author": "a", "publisher": "b", "title": "c", "publishDate": "d", "pubID": 0}')
+        self.getLoginList()
 
     def createUser(self, login, password):
         password = password.encode('utf-8')
@@ -29,14 +30,22 @@ class RedisHandler:
              saltHistory = saltHistory + salt
         self.redisConnection.hset('account', login, password.hex())
         self.redisConnection.hset('accountSalt', login, saltHistory.hex())
-        self.updateLoginList(login)
+        id = self.redisConnection.hlen('account')
+        self.updateLoginList(login, id)
 
-    def updateLoginList(self, login):
+    def updateLoginList(self, login, id):
         loginList = self.redisConnection.get("loginList")
-        loginList = json.dumps(loginList)
-        loginList.__add__(login)
+        loginList = json.loads(loginList)
+        loginList[id] = login
         self.redisConnection.set("loginList", json.dumps(loginList))
-        print(loginList, "XDDDDDDDDDDDDDDDDD", flush=True)
+
+    def getLoginList(self):
+        loginDict = self.redisConnection.get("loginList")
+        loginDict = json.loads(loginDict)
+        loginList = []
+        for id, login in loginDict.items():
+            loginList.append(login)
+        return loginList
 
 
     def checkLogin(self, login):
