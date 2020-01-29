@@ -15,6 +15,8 @@ class RedisHandler:
     def initUser(self):
         self.redisConnection.set("loginList", json.dumps({}))
         self.createUser("test", "qweqwe123")
+        self.createUser("qwe", "qweqwe123")
+        self.createUser("qweqwe", "qweqwe123")
         self.createUser("chaberb", "bardzotajnehaslo")
         self.getLoginList()
 

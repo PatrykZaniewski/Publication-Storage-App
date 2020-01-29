@@ -8,9 +8,10 @@ class RedisHandler:
         self.redisConnection = redisConnection
 
 
-    def addData(self, uid, author, publisher, title, publishDate):
+    def addData(self, uid, author, publisher, title, publishDate, share):
         pubID = self.redisConnection.hlen(uid)
-        obj = {"author": author, "publisher": publisher, "title": title, "publishDate": publishDate, "pubID": pubID}
+        print(share, flush=True)
+        obj = {"author": author, "publisher": publisher, "title": title, "publishDate": publishDate, "share": share, "pubID": pubID}
         objToStore = json.dumps(obj)
         self.redisConnection.hset(uid, pubID, objToStore)
         return pubID

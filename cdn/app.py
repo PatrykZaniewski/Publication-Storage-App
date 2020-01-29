@@ -94,6 +94,7 @@ def pubUpload():
     publisher = request.form.get('publisher')
     title = request.form.get('title')
     date = request.form.get('publishDate')
+    share = request.form.getlist('share')
     uid = request.form.get('uid')
     files = request.files.getlist('files')
 
@@ -106,7 +107,7 @@ def pubUpload():
     payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'upload':
         return make_response("invalidTokenPayload", 403)
-    pid = str(redisConn.addData(uid, author, publisher, title, date))
+    pid = str(redisConn.addData(uid, author, publisher, title, date, share))
     if files is not None:
         if not os.path.exists('/tmp/' + uid):
             os.mkdir('/tmp/' + uid)

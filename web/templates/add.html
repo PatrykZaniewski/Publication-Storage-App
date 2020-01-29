@@ -17,7 +17,8 @@
     <div class="col-6">
         <div class="background">
             <h2 class="title" id="title">Dodaj nową publikację {{ message | safe }}</h2>
-            <form class="form" action="https://web.company.com/addpublication" method="POST" enctype="multipartRequest/form-data">
+            <form class="form" action="https://web.company.com/addpublication" method="POST"
+                  enctype="multipartRequest/form-data">
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label>Autor:</label>
@@ -32,9 +33,23 @@
                     <label>Tytuł:</label>
                     <input type="text" class="form-control" name="title" id="pubTitle">
                 </div>
-                <div class="form-group">
-                    <label>Data publikacji:</label>
-                    <input type="date" class="form-control" name="publishDate" id="publishDate">
+                <div class="form-row">
+                    <div class="form-group col-md-10">
+                        <label>Data publikacji:</label>
+                        <input type="date" class="form-control" name="publishDate" id="publishDate">
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Mogą wyświetlać:</label>
+                        <br>
+                        <select id="share" name="share" multiple>
+                            <option selected value="-">-</option>
+                            {% for user in listOfUsers %}
+                                {% if user != uid %}
+                                    <option value={{ user }}>{{ user }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
                 <input type="hidden" name="token" value="{{ uploadToken }}"/>
                 <input type="hidden" name="uid" value="{{ uid }}"/>

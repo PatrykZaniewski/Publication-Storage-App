@@ -155,6 +155,7 @@ def auth():
                 response.set_cookie("session_id", session_id, max_age=SESSION_TIME, httponly=True, secure=True, samesite='Strict')
                 return response
             else:
+                #TODO blokowanie konta
                 listOfUsers = redisConn.getLoginList()
                 #print(type(listOfUsers), flush=True)
                 return redirectCallback("wrongCredentials", "/login")
@@ -231,6 +232,7 @@ def editPublication():
             detailData = json.loads(req.content)
             editToken = createEditToken(uid).decode('utf-8')
             publication = detailData.get('details')
+            #TODO trzeba podawac dwie listy!
             return render_template("edit.html", uid=uid, editToken=editToken, pid=pid,
                                    publication=json.loads(publication))
         else:
@@ -283,7 +285,8 @@ def addPublication():
         if session.checkSession(session_id):
             uid = session.getNicknameSession(session_id)
             uploadToken = createUploadToken(uid).decode('utf-8')
-            return render_template("add.html", uid=uid, uploadToken=uploadToken)
+            listOfUsers = redisConn.getLoginList()
+            return render_template("add.html", uid=uid, uploadToken=uploadToken, listOfUsers=listOfUsers)
         else:
             response = redirect("/login")
             response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True,
@@ -320,10 +323,11 @@ def addPubExecutive():
             title = request.form.get('title')
             date = request.form.get('publishDate')
             uid = request.form.get('uid')
+            share = request.form.getlist('share')
             files = request.files.getlist('files')
-
-            objToSend = {'author': author, 'publisher': publisher, 'title': title, 'publishDate': date, 'uid': uid,
+            objToSend = {'author': author, 'publisher': publisher, 'title': title, 'publishDate': date, 'uid': uid, 'share': share,
                         'token': token}
+            print(objToSend, flush=True)
             files = [('files', (f.filename, f.read())) for f in files]
 
             req = requests.post("http://cdn:5000/list", data=objToSend, files=files)
