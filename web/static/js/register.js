@@ -57,7 +57,6 @@ function checkPassword() {
         return true
     }
     return false;
-
 }
 
 function checkPasswordEquality() {
@@ -137,7 +136,7 @@ function register(e) {
         let parent = document.getElementById("title");
         let child = document.createElement("div");
         child.setAttribute("id", "generalError");
-        child.innerHTML = "Nie wypełniono wszystkich pól!";
+        child.innerHTML = "Nie wypełniono prawidłowo wszystkich pól!";
         child.style.color = "red";
         parent.appendChild(child);
     }
