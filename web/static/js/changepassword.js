@@ -1,6 +1,5 @@
 window.addEventListener("load", afterLoad);
 var newPassword, newPasswordRepeat, oldPassword;
-//TODO porobić regexy i zrobić callback
 function afterLoad() {
     let button = document.getElementById("changeButton");
     button.addEventListener("click", e => changePassword(e));

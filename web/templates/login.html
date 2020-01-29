@@ -2,17 +2,17 @@
 <html lang="pl">
 <head>
     <meta charset="utf-8"/>
-    <title>PDFile</title>
+    <title>Repozytorium publikacji</title>
     <script type=text/javascript src='../static/js/login.js'></script>
     <link rel="stylesheet" type="text/css" href="../static/css/login.css">
 </head>
 <body>
 <div class="container">
-    <form class="form">
-        <h1 class="title" id="title">PDFile</h1>
-        <input type="text" name="username" placeholder="Login" class="fieldInput"/>
-        <input type="password" name="password" placeholder="Hasło" class="fieldInput"/>
-        <input type="button" class="button" id="sendButton" value="Zaloguj"/>
+    <form class="form" action="/auth" method="POST">
+        <h1 class="title" id="title">Repozytorium publikacji {{ message | safe }}</h1>
+        <input type="text" id="login" name="login" placeholder="Login" class="fieldInput"/>
+        <input type="password" id="password" name="password" placeholder="Hasło" class="fieldInput"/>
+        <input type="submit" class="button" id="sendButton" value="Zaloguj"/>
         <div class="registerDiv">
             <a href="/register" type="submit" class="registerButton">Rejestracja</a>
         </div>

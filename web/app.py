@@ -22,6 +22,7 @@ from random import randrange
 load_dotenv(verbose=True)
 
 app = Flask(__name__)
+SESSION_COOKIE_SECURE = True
 app.secret_key = "super secret key"
 SESSION_TIME = int(getenv("SESSION_TIME"))
 JWT_SESSION_TIME = int(getenv('JWT_SESSION_TIME'))
@@ -49,7 +50,10 @@ def login():
     if session_id:
         if session.checkSession(session_id):
             return redirect("/index")
-    return render_template("login.html")
+    err = se.get('err')
+    se['err'] = ''
+    message = createFileMessage(err)
+    return render_template("login.html", message=message)
 
 
 @app.route('/index')
@@ -133,24 +137,30 @@ def changepassworduser():
 
 @app.route('/auth', methods=['POST'])
 def auth():
-    #TODO w auth polaczyc znowu js z html
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            return redirect("/login")
+
     time.sleep(randrange(10)/10)
-    data = request.json
-    username = data['username']
-    password = data['password']
-    if re.match("^[a-zA-Z0-9]*$", username) and re.match("^[a-zA-Z0-9!@#$%^&]*$", password):
-        if username is not "" and password is not "":
-            if redisConn.checkCrudentials(username, password) is True:
-                response = make_response('', 200)
-                session_id = session.createSession(username)
+    login = request.form.get('login')
+    password = request.form.get('password')
+    if re.match("^[a-zA-Z0-9]*$", login) and re.match("^[a-zA-Z0-9!@#$%^&]*$", password):
+        if login is not "" and password is not "":
+            if redisConn.checkCredentials(login, password) is True:
+                redisConn.postMessage(login, "LOGGED_IN")
+                response = make_response('', 303)
+                session_id = session.createSession(login)
+                response.headers["Location"] = "/index"
                 response.set_cookie("session_id", session_id, max_age=SESSION_TIME, httponly=True, secure=True, samesite='Strict')
+                return response
             else:
-                response = make_response('', 404)
-                response.set_cookie("session_id", "INVALIDATE", max_age=1, httponly=True, secure=True, samesite='Strict')
-                response.headers["Location"] = "/login"
-            return response
-        return redirect("/login")
+                listOfUsers = redisConn.getLoginList()
+                #print(type(listOfUsers), flush=True)
+                return redirectCallback("wrongCredentials", "/login")
+        return make_response("Empty password or/and login", 400)
     return make_response("Incorrect characters in login/password", 400)
+
 
 @app.route('/registeruser', methods=['POST'])
 def registeruser():
@@ -164,7 +174,6 @@ def registeruser():
                 req = requests.get("http://web:5000/checklogin/" + newLogin)
                 if req.status_code == 404:
                     redisConn.createUser(newLogin, password)
-                    # TODO może jakis komunikat jak da rade?
                     return redirect("/login")
                 return make_response("Typed login already exists", 400)
             return make_response("Typed passwords are not same", 400)
@@ -350,7 +359,8 @@ def delFileExecutive():
             return redirectCallback(req.text)
     return redirect("/login")
 
-def redirectCallback(error, dst = "/index"):
+
+def redirectCallback(error, dst="/index"):
     response = make_response("", 303)
     response.headers["Location"] = "https://web.company.com/callback?error=" + error + "&dst=" + dst
     response.headers["Content-Type"] = "multipart/form-data"
@@ -360,13 +370,15 @@ def redirectCallback(error, dst = "/index"):
 @app.route('/callback')
 def callback():
     session_id = request.cookies.get('session_id')
+    if request.args.get('error') == "wrongCredentials":
+        se['err'] = "wrongCredentials"
+        return redirect("/login")
     if session_id:
         if session.checkSession(session_id):
             err = request.args.get('error')
             dst = request.args.get('dst')
             se['err'] = err
             return redirect(dst)
-
     return redirect("/login")
 
 
@@ -428,4 +440,6 @@ def createFileMessage(err):
         message = f'<div class="info">Hasło zmieniono!</div>'
     elif err == "wrongPasswordChange":
         message = f'<div class="error">Nieprawidłowe aktualne hasło!</div>'
+    elif err == "wrongCredentials":
+        message = f'<div class="error"><br>Nieprawidłowe dane logowania!</div>'
     return message

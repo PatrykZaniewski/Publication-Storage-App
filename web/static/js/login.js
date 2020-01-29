@@ -1,36 +1,46 @@
 window.addEventListener("load", afterLoad);
-var sendButton;
+var sendButton, login, password;
 
 function afterLoad() {
-    sendButton = document.getElementById("sendButton")
+    login = document.getElementById("login");
+    password = document.getElementById("password");
+    sendButton = document.getElementById("sendButton");
+    login.addEventListener("keyup", function(){checkInput("login")});
+    password.addEventListener("keyup", function(){checkInput("password")});
     sendButton.addEventListener("click", checkData);
+}
+
+function checkInput(type) {
+    if (type === "login") {
+        let regex = /^[a-zA-Z0-9]*$/;
+        if (login.value.match(regex) && login.value.length > 2) {
+            return true;
+        }
+        return false;
+    } else if (type === "password") {
+        let regex = /^[a-zA-Z0-9!@#$%^&]*$/;
+        if (password.value.match(regex) && login.value.length > 5) {
+            return true;
+        }
+        return false;
+    }
+
 }
 
 function checkData() {
     let inputs = document.querySelectorAll(".fieldInput");
-    if (inputs[0].value.length === 0 || inputs[1].value.length === 0) {
-        messageLogin("EMPTY");
-        return null;
-    }
-    let xhttp = new XMLHttpRequest();
-
-    xhttp.onreadystatechange = function () {
-        if(this.readyState === 4) {
-            if (this.status === 200) {
-                window.location.href = "https://web.company.com/index";
-            } else if (this.status === 404) {
-                messageLogin("INVALIDATE")
-            } else if (this.status === 400) {
-                messageLogin("BADDATA")
-            } else {
-                messageLogin("OTHER")
-            }
+    if (inputs[0].value.length !== 0 || inputs[1].value.length !== 0) {
+        if (checkInput("login") && checkInput("password")) {
+            return;
         }
-    };
+        //TODO zle dane
+        messageLogin("");
+        event.preventDefault();
+        return;
+    }
+    messageLogin("EMPTY");
+    event.preventDefault();
 
-    xhttp.open("POST", "auth", false);
-    xhttp.setRequestHeader("Content-Type", "application/json");
-    xhttp.send(JSON.stringify({"username": inputs[0].value, "password": inputs[1].value}));
 }
 
 function messageLogin(type) {
@@ -39,19 +49,8 @@ function messageLogin(type) {
         parent.removeChild(parent.children[0]);
     }
     let child = document.createElement("label");
-    switch (type) {
-        case "EMPTY":
-            child.setAttribute("class", "error");
-            child.innerHTML = "<br>Wypełnij wszystkie pola!";
-            break;
-        case "INVALIDATE":
-            child.setAttribute("class", "error");
-            child.innerHTML = "<br>Wprowadzono nieprawidłowy login i/lub hasło!";
-            break;
-        case "OTHER":
-            child.setAttribute("class", "error");
-            child.innerHTML = "<br>Wystąpił błąd logowania! Spróbuj później.";
-            break;
-    }
+    child.setAttribute("class", "error");
+    child.innerHTML = "<br>Wypełnij wszystkie pola!";
+
     parent.appendChild(child);
 }

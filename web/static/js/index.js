@@ -14,6 +14,12 @@ function messageHandler() {
             transmission = true;
             out = document.getElementById('notification');
         }
-        out.innerHTML = out.innerHTML + '<div class ="warning">Publikacja o tytule "' + e.data + '" została dodana w innej przeglądarce. Odśwież listę, aby ją zobaczyć.</div>';
+        if(e.data !== "LOGGED_IN") {
+            out.innerHTML = out.innerHTML + '<div class ="warning">Publikacja o tytule "' + e.data + '" została dodana w innej przeglądarce. Odśwież listę, aby ją zobaczyć.</div>';
+        }
+        else
+        {
+            out.innerHTML = out.innerHTML + '<div class ="error">Wykryto logowanie z innego źródła niż to!</div>';
+        }
     };
 }

@@ -9,6 +9,9 @@ class RedisHandler:
     def __init__(self, redisConnection):
         self.redisConnection = redisConnection
 
+    def postMessage(self, uid, message):
+        self.redisConnection.publish(uid, message)
+
     def initUser(self):
         self.redisConnection.set("loginList", json.dumps({}))
         self.createUser("test", "qweqwe123")
@@ -55,7 +58,7 @@ class RedisHandler:
     def getAllUsers(self):
         return self.redisConnection.hkey('account')
 
-    def checkCrudentials(self, login, passwordToCheck):
+    def checkCredentials(self, login, passwordToCheck):
         if self.redisConnection.hget('account', login) is None:
             return False
         password = bytes.fromhex(self.redisConnection.hget('account', login))
