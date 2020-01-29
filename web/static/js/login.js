@@ -5,36 +5,29 @@ function afterLoad() {
     login = document.getElementById("login");
     password = document.getElementById("password");
     sendButton = document.getElementById("sendButton");
-    login.addEventListener("keyup", function(){checkInput("login")});
-    password.addEventListener("keyup", function(){checkInput("password")});
     sendButton.addEventListener("click", checkData);
 }
 
-function checkInput(type) {
-    if (type === "login") {
-        let regex = /^[a-zA-Z0-9]*$/;
-        if (login.value.match(regex) && login.value.length > 2) {
-            return true;
-        }
-        return false;
-    } else if (type === "password") {
-        let regex = /^[a-zA-Z0-9!@#$%^&]*$/;
-        if (password.value.match(regex) && login.value.length > 5) {
-            return true;
-        }
-        return false;
+function checkInput() {
+
+    let regexLogin = /^[a-zA-Z0-9]*$/;
+    let regexPassword = /^[a-zA-Z0-9!@#$%^&]*$/;
+    if (login.value.match(regexLogin) && password.value.match(regexPassword)) {
+        return true;
     }
+    messageLogin("INVALID");
+    return false;
 
 }
 
 function checkData() {
     let inputs = document.querySelectorAll(".fieldInput");
     if (inputs[0].value.length !== 0 || inputs[1].value.length !== 0) {
-        if (checkInput("login") && checkInput("password")) {
+        console.log("EEEE")
+
+        if (checkInput()) {
             return;
         }
-        //TODO zle dane
-        messageLogin("");
         event.preventDefault();
         return;
     }
@@ -50,7 +43,11 @@ function messageLogin(type) {
     }
     let child = document.createElement("label");
     child.setAttribute("class", "error");
-    child.innerHTML = "<br>Wypełnij wszystkie pola!";
+    if (type === "EMPTY") {
+        child.innerHTML = "<br>Wypełnij wszystkie pola!";
+    } else if (type === "INVALID") {
+        child.innerHTML = "<br>Nieprawidłowe znaki w polach logowania! Prawidłowe to [a-zA-Z0-9] dla loginu i [a-zA-Z0-9!@#$%^&] dla hasła!";
+    }
 
     parent.appendChild(child);
 }
