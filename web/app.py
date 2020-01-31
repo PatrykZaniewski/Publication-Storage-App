@@ -125,6 +125,8 @@ def changepassworduser():
             if re.match("^[a-zA-Z0-9!@#$%^&]*$", oldPassword) and re.match("^[a-zA-Z0-9!@#$%^&]*$", newPassword) and re.match(
                     "^[a-zA-Z0-9!@#$%^&]*$", newPasswordRepeat):
                 if len(newPassword) > 5:
+                    if len(newPassword) > 30:
+                        return make_response("Password too long", 400)
                     if newPassword == newPasswordRepeat:
                         if redisConn.checkCrudentials(uid, oldPassword):
                             redisConn.createUser(uid, newPassword)
@@ -147,6 +149,8 @@ def auth():
     password = request.form.get('password')
     if re.match("^[a-zA-Z0-9]*$", login) and re.match("^[a-zA-Z0-9!@#$%^&]*$", password):
         if login is not "" and password is not "":
+            if len(login) > 20 or len(password) > 30:
+                return make_response("Login/password too long", 400)
             if redisConn.checkCredentials(login, password) is True:
                 redisConn.postMessage(login, "LOGGED_IN")
                 response = make_response('', 303)
@@ -155,9 +159,6 @@ def auth():
                 response.set_cookie("session_id", session_id, max_age=SESSION_TIME, httponly=True, secure=True, samesite='Strict')
                 return response
             else:
-                #TODO blokowanie konta
-                listOfUsers = redisConn.getLoginList()
-                #print(type(listOfUsers), flush=True)
                 return redirectCallback("wrongCredentials", "/login")
         return make_response("Empty password or/and login", 400)
     return make_response("Incorrect characters in login/password", 400)
@@ -171,6 +172,8 @@ def registeruser():
     if re.match("^[a-zA-Z0-9]*$", newLogin) and re.match("^[a-zA-Z0-9!@#$%^&]*$", password) and re.match(
             "^[a-zA-Z0-9!@#$%^&]*$", passwordRepeat):
         if len(newLogin) > 2 and len(password) > 5:
+            if len(newLogin) > 20 or len(password) > 30:
+                return make_response("Login/password too long", 400)
             if password == passwordRepeat:
                 req = requests.get("http://web:5000/checklogin/" + newLogin)
                 if req.status_code == 404:

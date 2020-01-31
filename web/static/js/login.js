@@ -12,7 +12,7 @@ function checkInput() {
 
     let regexLogin = /^[a-zA-Z0-9]*$/;
     let regexPassword = /^[a-zA-Z0-9!@#$%^&]*$/;
-    if (login.value.match(regexLogin) && password.value.match(regexPassword)) {
+    if (login.value.match(regexLogin) && password.value.match(regexPassword) && login.value.length <= 20 && password.value.length <= 30) {
         return true;
     }
     messageLogin("INVALID");
@@ -23,8 +23,6 @@ function checkInput() {
 function checkData() {
     let inputs = document.querySelectorAll(".fieldInput");
     if (inputs[0].value.length !== 0 || inputs[1].value.length !== 0) {
-        console.log("EEEE")
-
         if (checkInput()) {
             return;
         }

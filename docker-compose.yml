@@ -10,6 +10,10 @@ services:
       - "443:443"
     volumes:
       - ./nginx-uwsgi.conf:/etc/nginx/nginx.conf
+      - ./certificates/web.key:/etc/nginx/web.key
+      - ./certificates/web.crt:/etc/nginx/web.crt
+      - ./certificates/cdn.key:/etc/nginx/cdn.key
+      - ./certificates/cdn.crt:/etc/nginx/cdn.crt
 
   web:
     build: web

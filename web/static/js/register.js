@@ -88,7 +88,6 @@ function checkPasswordComplex() {
             result += countArray[letter] / letterAmount * Math.log2(countArray[letter] / letterAmount)
         }
         result *= -1;
-        console.log(result);
         if (result < 2) {
             passwordNotification(2)
         } else if (result >= 2 && result < 3) {

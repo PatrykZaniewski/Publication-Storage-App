@@ -33,18 +33,7 @@
                     <label>Data dodania: {{ publication.get('publishDate') }}</label>
                 </div>
             </div>
-            <div class="row">
-                <div class="col">
-                    <label>Mogą wyświetlać:</label>
-                    <br>
-                    <label>{{ uid }}</label><br>
-                    {% for user in publication.get('share') %}
-                        {% if user != uid %}
-                            <label value={{ user }}>{{ user }}</label><br>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
+
 
             {% if files|length > 0 %}
                 <div class="row">
