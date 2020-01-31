@@ -19,12 +19,21 @@
             <h2 class="title">Twoje publikacje {{ message | safe }}</h2>
             <div class="list-group">
                 {% for id, title in listOfPublications.items() %}
-                    {% if id != '_links' %}
+                    {% if id != 'extraPublications' %}
                         <a class="list-group-item list-group-item-action"
                            href="https://web.company.com/details?token={{ listToken }}
                     &uid={{ uid }}&pid={{ id }}">{{ loop.index }}. {{ title }}</a>
                     {% endif %}
                 {% endfor %}
+                {% if listOfPublications.get('extraPublications') != None %}
+                    {% for owner, publications in listOfPublications.get('extraPublications').items() %}
+                        {% for publication, title in publications.items() %}
+                              <a class="list-group-item list-group-item-action"
+                           href="https://web.company.com/detailsshare?token={{ listToken }}
+                    &uid={{ uid }}&spid={{ publication }}&suid={{ owner }}">{{ loop.index }}. [Publikacja użytkownika:{{ owner }}] {{ title.get('title') }}</a>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
             </div>
             <form class="form" action="/add">
                 <input class="btn btn-primary" type="submit" value="Dodaj nową publikację"/>

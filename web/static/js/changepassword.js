@@ -34,13 +34,13 @@ function checkOldPassword(){
 
     }
     let regex = /^[a-zA-Z0-9!@#$%^&]*$/;
-    if (oldPassword.value.match(regex) && oldPassword.value.length >= 6) {
+    if (oldPassword.value.match(regex) && oldPassword.value.length >= 6 && oldPassword.value.length <= 30) {
         return true;
     }
     let parent = document.getElementById("labelOldPassword");
     let child = document.createElement("div");
     child.setAttribute("id", "oldPasswordCorrectness");
-    child.innerHTML = "Stare hasło nie spełnia wymogów - co najmniej 6 znaków ze zbioru [a-zA-Z0-9!@#$%^&]";
+    child.innerHTML = "Stare hasło nie spełnia wymogów - co najmniej 6, a co najwyżej 30 znaków ze zbioru [a-zA-Z0-9!@#$%^&]";
     document.getElementById("oldPassword").style.background = "red";
     parent.appendChild(child);
     return false;
@@ -77,7 +77,7 @@ function checkNewPasswordEquality() {
 
 function checkNewPasswordComplex() {
     let regex = /^[a-zA-Z0-9!@#$%^&]*$/;
-    if (newPassword.value.match(regex) && newPassword.value.length >= 6) {
+    if (newPassword.value.match(regex) && newPassword.value.length >= 6 && newPassword.value.length <= 30) {
         let countArray = {}, letterAmount = 0, result = 0;
         for (let letter of newPassword.value.split('')) {
             countArray[letter] ? countArray[letter]++ : countArray[letter] = 1;
@@ -107,7 +107,7 @@ function passwordNotification(code) {
     child.setAttribute("id", "newPasswordComplex");
     switch (code) {
         case 3:
-            child.innerHTML = "Hasło nie spełnia wymogów - co najmniej 6 znaków ze zbioru [a-zA-Z0-9!@#$%^&]";
+            child.innerHTML = "Hasło nie spełnia wymogów - co najmniej 6, a co najwyżej 30 znaków ze zbioru [a-zA-Z0-9!@#$%^&]";
             document.getElementById("newPassword").style.background = "red";
             break;
         case 2:

@@ -45,8 +45,14 @@
                     <div class="form-group col-md-2">
                         <label>Mogą wyświetlać:</label>
                         <br>
-                        <select id="share" name="share" disabled multiple>
+                        <select id="share" name="share" multiple>
+                            <option selected value="-">-</option>
                             {% for user in publication.get('share') %}
+                                {% if user != uid %}
+                                    <option selected value={{ user }}>{{ user }}</option>
+                                {% endif %}
+                            {% endfor %}
+                            {% for user in subList %}
                                 {% if user != uid %}
                                     <option value={{ user }}>{{ user }}</option>
                                 {% endif %}

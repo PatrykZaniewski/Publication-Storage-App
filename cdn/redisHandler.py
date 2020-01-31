@@ -16,8 +16,8 @@ class RedisHandler:
         self.redisConnection.hset(uid, pubID, objToStore)
         return pubID
 
-    def updateData(self, pid, uid, author, publisher, title, publishDate):
-        obj = {"author": author, "publisher": publisher, "title": title, "publishDate": publishDate, "pubID": pid}
+    def updateData(self, pid, uid, author, publisher, title, publishDate, share):
+        obj = {"author": author, "publisher": publisher, "title": title, "publishDate": publishDate, "share": share, "pubID": pid}
         objToStore = json.dumps(obj)
         self.redisConnection.hset(uid, pid, objToStore)
 
@@ -26,8 +26,36 @@ class RedisHandler:
         listData = {}
         for id, stringData in data.items():
             listData[id] = json.loads(stringData).get('title')
+        if self.redisConnection.hget("accessToPublication", uid) is not None:
+            sharePublications = json.loads(self.redisConnection.hget("accessToPublication", uid))
+            extraPublications = {}
+            for pubOwner, publicationToShare in sharePublications.items():
+                oneOwnerPublications = {}
+                for publication in publicationToShare:
+                    pub = json.loads(self.getData(pubOwner, publication))
+                    pub = json.loads(pub)
+                    oneOwnerPublications[pub['pubID']] = {"title": pub['title']}
+                extraPublications[pubOwner] = oneOwnerPublications
+            extraPublications = {"extraPublications": extraPublications}
+            listData.update(extraPublications)
         return listData
 
+    def removeAccess(self, guest, owner, ownerPub):
+        shareList = self.redisConnection.hget('accessToPublication', guest)
+        shareList = json.loads(shareList)
+        shareList.get(owner).remove(ownerPub)
+        self.redisConnection.hset('accessToPublication', guest, json.dumps(shareList))
+
+    def setAccess(self, guest, owner, ownerPub):
+        if self.redisConnection.hget('accessToPublication', guest) is None:
+            self.redisConnection.hset('accessToPublication', guest, json.dumps({}))
+        shareList = self.redisConnection.hget('accessToPublication', guest)
+        shareList = json.loads(shareList)
+        if shareList.get(owner) is None:
+            shareList[owner] = [ownerPub]
+        else:
+            shareList.get(owner).append(ownerPub)
+        self.redisConnection.hset('accessToPublication', guest, json.dumps(shareList))
 
     def getData(self, uid, pubID):
         data = self.redisConnection.hget(uid, pubID)

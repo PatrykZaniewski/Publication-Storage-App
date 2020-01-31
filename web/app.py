@@ -197,6 +197,8 @@ def detailsPublication():
             uid = request.args.get('uid')
             pid = request.args.get('pid')
             token = request.args.get('token')
+            if uid == None or pid == None or token == None:
+                return make_response("missingArguments", 400)
             req = requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token)
             if req.status_code != requests.codes.ok:
                 return redirectCallback(req.text)
@@ -218,6 +220,36 @@ def detailsPublication():
     return redirect("/login")
 
 
+@app.route('/detailsshare')
+def detailsSharePublication():
+    session_id = request.cookies.get('session_id')
+    if session_id:
+        if session.checkSession(session_id):
+            uid = request.args.get('uid')
+            spid = request.args.get('spid')
+            suid = request.args.get('suid')
+            token = request.args.get('token')
+            if uid == None or spid == None or suid == None or token == None:
+                return make_response("missingArguments", 400)
+            req = requests.get("http://cdn:5000/listshare/" + uid + "/" + spid + "/" + suid + "?token=" + token)
+            if req.status_code != requests.codes.ok:
+                return redirectCallback(req.text)
+            detailData = json.loads(req.content)
+            downloadToken = createDownloadToken(uid).decode('utf-8')
+            listToken = createListToken(uid).decode('utf-8')
+            publication = detailData.get('details')
+            files = detailData.get('files')
+            return render_template("detailsshare.html", uid=uid, spid=spid, suid=suid, downloadToken=downloadToken,
+                                   listToken=listToken,
+                                   publication=json.loads(publication), files=json.loads(files))
+        else:
+            response = redirect("/login")
+            response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True,
+                                samesite='Strict')
+            return response
+    return redirect("/login")
+
+
 @app.route('/edit')
 def editPublication():
     session_id = request.cookies.get('session_id')
@@ -226,15 +258,19 @@ def editPublication():
             uid = request.args.get('uid')
             pid = request.args.get('pid')
             token = request.args.get('token')
+            if uid == None or pid == None or uid == None:
+                return make_response("missingArguments", 400)
             req = requests.get("http://cdn:5000/list/" + uid + "/" + pid + "?token=" + token)
             if req.status_code != requests.codes.ok:
                 return redirectCallback(req.text)
             detailData = json.loads(req.content)
             editToken = createEditToken(uid).decode('utf-8')
             publication = detailData.get('details')
-            #TODO trzeba podawac dwie listy!
+            listActive = json.loads(publication).get('share')
+            listAll = redisConn.getLoginList()
+            subList = (list(set(listAll) - set(listActive)))
             return render_template("edit.html", uid=uid, editToken=editToken, pid=pid,
-                                   publication=json.loads(publication))
+                                   publication=json.loads(publication), subList=subList)
         else:
             response = redirect("/login")
             response.set_cookie("session_id", "INVALIDATE", max_age=INVALIDATE, httponly=True, secure=True,
@@ -255,12 +291,14 @@ def editPublicationExecutive():
             date = request.form.get('publishDate')
             pid = request.form.get('pid')
             uid = request.form.get('uid')
+            share = request.form.getlist('share')
+            if '-' in share:
+                share.remove('-')
 
-            objToSend = {'author': author, 'publisher': publisher, 'title': title, 'publishDate': date, 'uid': uid,
+            objToSend = {'author': author, 'publisher': publisher, 'title': title, 'publishDate': date, 'uid': uid, 'share': share,
                         'token': token}
 
             req = requests.post("http://cdn:5000/updlist/" + uid + "/" + pid, data=objToSend)
-
             return redirectCallback(req.text)
     return redirect("/login")
 
@@ -324,13 +362,15 @@ def addPubExecutive():
             date = request.form.get('publishDate')
             uid = request.form.get('uid')
             share = request.form.getlist('share')
+            if '-' in share:
+                share.remove('-')
             files = request.files.getlist('files')
             objToSend = {'author': author, 'publisher': publisher, 'title': title, 'publishDate': date, 'uid': uid, 'share': share,
                         'token': token}
-            print(objToSend, flush=True)
             files = [('files', (f.filename, f.read())) for f in files]
 
             req = requests.post("http://cdn:5000/list", data=objToSend, files=files)
+
             return redirectCallback(req.text)
     return redirect("/login")
 

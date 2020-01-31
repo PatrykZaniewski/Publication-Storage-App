@@ -11,16 +11,34 @@ function afterLoad() {
 }
 
 function checkData(e) {
+
+    let regex = /^[A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ.,]*$/;
     if (author.value == "" || title.value == "" || publisher.value == "" || date.value == "") {
         let parent = document.getElementById("title");
         let child = document.createElement("div");
 
         if (parent.childElementCount > 0) {
-        parent.removeChild(parent.children[0]);
+            parent.removeChild(parent.children[0]);
         }
 
         child.setAttribute("class", "error");
         child.innerHTML = "Wypełnij wszystkie pola!";
+        parent.appendChild(child);
+
+        e.preventDefault();
+        return;
+    }
+    if (!author.value.match(regex) || !title.value.match(regex) || !publisher.value.match(regex) || !author.value.length > 128 || title.value.length > 128 || publisher.value.length > 128)
+    {
+        let parent = document.getElementById("title");
+        let child = document.createElement("div");
+
+        if (parent.childElementCount > 0) {
+            parent.removeChild(parent.children[0]);
+        }
+
+        child.setAttribute("class", "error");
+        child.innerHTML = "Pola nie spełniają wymogów - co najmniej 1, a co najwyżej 128 znaków ze zbioru [A-Za-zżźćńółęąśŻŹĆĄŚĘŁÓŃ]!";
         parent.appendChild(child);
 
         e.preventDefault()

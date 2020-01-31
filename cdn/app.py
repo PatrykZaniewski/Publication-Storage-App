@@ -32,6 +32,10 @@ def pubDel(uid, pid):
     payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'delete':
         return make_response("invalidTokenPayload", 403)
+    publication = json.loads(redisConn.getData(uid, pid))
+    oldGuests = json.loads(publication).get('share')
+    for user in oldGuests:
+        redisConn.removeAccess(user, uid, pid)
     redisConn.deleteData(uid, pid)
     if os.path.exists('/tmp/' + uid + '/' + pid):
         shutil.rmtree('/tmp/' + uid + '/' + pid)
@@ -55,6 +59,69 @@ def pubDetails(uid, pid):
     if os.path.exists("/tmp/" + uid + "/" + pid):
         listOfFiles = os.listdir("/tmp/" + uid + "/" + pid)
     publication = redisConn.getData(uid, pid)
+    if publication is None or publication == "null":
+        return make_response("PublicationNotFound", 404)
+    publication = json.loads(publication)
+    listOfFiles = json.dumps(listOfFiles)
+    detailData = {'details': publication, 'files': listOfFiles}
+    detailData = json.dumps(detailData)
+    return detailData
+
+
+@app.route('/filesshare/<uid>/<spid>/<suid>', methods=['GET'])
+def fileShareDownload(uid, spid, suid):
+    token = request.args.get('token')
+    filename = request.args.get('filename')
+
+    if uid is None or len(uid) == 0 or spid is None or len(spid) == 0 or suid is None or len(suid) == 0:
+        return make_response("noCredentials", 404)
+    if token is None:
+        return make_response("noTokenProvided", 400)
+    if not valid(token):
+        return make_response("invalidToken", 401)
+    payload = jwt.decode(token, JWT_SECRET)
+    if payload.get('uid') != uid or payload.get('action') != 'download':
+        return make_response("invalidTokenPayload", 403)
+
+    publication = json.loads(redisConn.getData(suid, spid))
+    guests = json.loads(publication).get('share')
+    try:
+        guests.index(payload.get('uid'))
+    except:
+        return make_response("invalidTokenPayload", 403)
+
+    if os.path.isfile("/tmp/" + suid + "/" + spid + "/" + filename) is False:
+        return make_response("fileNotFound", 404)
+    file = "/tmp/" + suid + "/" + spid + "/" + filename
+    file = open(file, 'rb')
+    return send_file(file, attachment_filename=filename, as_attachment=True)
+
+
+@app.route('/listshare/<uid>/<spid>/<suid>', methods=['GET'])
+def pubDetailsShare(uid, spid, suid):
+    token = request.args.get('token')
+
+    if uid is None or len(uid) == 0 or spid is None or len(spid) == 0 or suid is None or len(suid) == 0:
+        return make_response("noCredentials", 404)
+    if token is None:
+        return make_response("noTokenProvided", 400)
+    if not valid(token):
+        return make_response("invalidToken", 401)
+    payload = jwt.decode(token, JWT_SECRET)
+    if payload.get('uid') != uid or payload.get('action') != 'list':
+        return make_response("invalidTokenPayload", 403)
+
+    publication = json.loads(redisConn.getData(suid, spid))
+    guests = json.loads(publication).get('share')
+    try:
+        guests.index(payload.get('uid'))
+    except:
+        return make_response("invalidTokenPayload", 403)
+
+    listOfFiles = []
+    if os.path.exists("/tmp/" + suid + "/" + spid):
+        listOfFiles = os.listdir("/tmp/" + suid + "/" + spid)
+    publication = redisConn.getData(suid, spid)
     publication = json.loads(publication)
     listOfFiles = json.dumps(listOfFiles)
     detailData = {'details': publication, 'files': listOfFiles}
@@ -76,14 +143,6 @@ def pubList(uid):
     if payload.get('uid') != uid or payload.get('action') != 'list':
         return make_response("invalidTokenPayload", 403)
     listOfPublications = redisConn.getList(uid)
-    hateoas = {"_links": {"self": {"href": "https://cdn.company.com/list/" + uid, "method": "GET"},
-                          "details": {"href": "https://cdn.company.com/list/" + uid + "/0", "method": "GET"},
-                          "addPub": {"href": "https://cdn.company.com/list", "method": "POST"},
-                          "deletePub": {"href": "https://cdn.company.com/dellist/" + uid + "/0", "method": "POST"},
-                          "updPub": {"href": "https://cdn.company.com/updlist/" + uid + "/0", "method": "POST"},
-                          "getFiles": {"href": "https://cdn.company.com/files/" + uid + "/0", "method": "GET"}
-                          }}
-    listOfPublications.update(hateoas)
     return json.dumps(listOfPublications)
 
 
@@ -118,6 +177,8 @@ def pubUpload():
                 file.save('/tmp/' + uid + '/' + pid + '/' + file.filename)
                 file.close()
     redisConn.postMessage(uid, title)
+    for user in share:
+        redisConn.setAccess(user, uid, pid)
     return make_response("uploadedPublication", 200)
 
 
@@ -128,6 +189,7 @@ def pubUpd(uid, pid):
     publisher = request.form.get('publisher')
     title = request.form.get('title')
     date = request.form.get('publishDate')
+    share = request.form.getlist('share')
 
     if uid is None or len(uid) == 0 or pid is None or len(pid) == 0:
         return make_response("noCredentials", 404)
@@ -138,7 +200,13 @@ def pubUpd(uid, pid):
     payload = jwt.decode(token, JWT_SECRET)
     if payload.get('uid') != uid or payload.get('action') != 'edit':
         return make_response("invalidTokenPayload", 403)
-    redisConn.updateData(pid, uid, author, publisher, title, date)
+    publication = json.loads(redisConn.getData(uid, pid))
+    oldGuests = json.loads(publication).get('share')
+    redisConn.updateData(pid, uid, author, publisher, title, date, share)
+    for user in oldGuests:
+        redisConn.removeAccess(user, uid, pid)
+    for user in share:
+        redisConn.setAccess(user, uid, pid)
     return make_response("updatedPublication", 200)
 
 

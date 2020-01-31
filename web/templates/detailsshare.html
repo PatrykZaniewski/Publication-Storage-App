@@ -16,7 +16,7 @@
     </div>
     <div class="col-6">
         <div class="background">
-            <h2 class="title" id="title">Publikacja o ID: {{ publication.get('pubID') }} </h2>
+            <h2 class="title" id="title">Publikacja użytkownika: {{ suid }} </h2>
             <div class="row">
                 <div class="col">
                     <label>Tytuł: {{ publication.get('title') }}</label>
@@ -53,55 +53,19 @@
                             Pliki:
                             {% for file in files %}
                                 <li class="list-group-item"><a
-                                        href="https://cdn.company.com/files/{{ uid }}/{{ publication.get('pubID') }}?token={{ downloadToken }}&filename={{ file }}">{{ loop.index }}. {{ file }}</a>
-                                    <form action="https://web.company.com/deletefile" method="POST">
-                                        <input type="hidden" name="uid" value="{{ uid }}"/>
-                                        <input type="hidden" name="pid" value="{{ publication.get('pubID') }}"/>
-                                        <input type="hidden" name="token" value="{{ deleteToken }}"/>
-                                        <input type="hidden" name="filename" value="{{ file }}"/>
-                                        <button type="submit" class="btn btn-danger">Usuń</button>
-                                    </form>
+                                        href="https://cdn.company.com/filesshare/{{ uid }}/{{ spid }}/{{ suid }}?token={{ downloadToken }}&filename={{ file }}">{{ loop.index }}. {{ file }}</a>
                                 </li>
                             {% endfor %}
                         </ul>
                     </div>
                 </div>
             {% endif %}
-
-            <form class="form"
-                  action="https://web.company.com/addfiles"
-                  method="POST" enctype="multipart/form-data">
-                <input type="file" name="files" id="files" multiple/>
-                <input type="hidden" name="uid" value="{{ uid }}"/>
-                <input type="hidden" name="pid" value="{{ publication.get('pubID') }}"/>
-                <input type="hidden" name="token" value="{{ uploadToken }}"/>
-                <button type="submit" class="btn btn-success" id="submitButton">Dodaj pliki</button>
-            </form>
             <div class="row">
                 <div class="col">
                     <form class="form"
                           action="https://web.company.com"
                           method="GET">
                         <button type="submit" class="btn btn-info">Strona główna</button>
-                    </form>
-                </div>
-                <div class="col">
-                    <form class="form"
-                          action="https://web.company.com/edit"
-                          method="GET">
-                        <input type="hidden" name="token" value="{{ listToken }}"/>
-                        <input type="hidden" name="pid" value="{{ publication.get('pubID') }}"/>
-                        <input type="hidden" name="uid" value="{{ uid }}"/>
-                        <button type="submit" class="btn btn-primary">Edytuj publikację</button>
-                    </form>
-                </div>
-                <div class="col">
-                    <form class="form"
-                          action="https://web.company.com/deletepublication" method="POST">
-                        <input type="hidden" name="token" value="{{ deleteToken }}"/>
-                        <input type="hidden" name="pid" value="{{ publication.get('pubID') }}"/>
-                        <input type="hidden" name="uid" value="{{ uid }}"/>
-                        <button type="submit" class="btn btn-danger">Usuń publikację</button>
                     </form>
                 </div>
             </div>

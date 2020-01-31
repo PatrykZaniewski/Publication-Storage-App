@@ -20,7 +20,7 @@ function checkLoginAvailable() {
     let parent = document.getElementById("labelLogin");
     let child = document.createElement("div");
     child.setAttribute("id", "loginAvailable");
-    if (login.value.length >= 3 && login.value.match(regex)) {
+    if (login.value.length <= 20 && login.value.length >= 3 && login.value.match(regex)) {
         let xhttp = new XMLHttpRequest();
         xhttp.overrideMimeType('text/xml');
         xhttp.onreadystatechange = function () {
@@ -39,7 +39,7 @@ function checkLoginAvailable() {
         xhttp.open("GET", "/checklogin/" + login.value, true);
         xhttp.send();
     } else {
-        child.innerHTML = "Login nie spełnia wymogów - co  najmniej 3 znaki ze zbioru [a-zA-Z0-9]!";
+        child.innerHTML = "Login nie spełnia wymogów - co  najmniej 3, a co najwyżej 20 znaków ze zbioru [a-zA-Z0-9]!";
         parent.appendChild(child);
         document.getElementById("login").style.background = "red";
         loginCorrect = false;
@@ -77,7 +77,7 @@ function checkPasswordEquality() {
 
 function checkPasswordComplex() {
     let regex = /^[a-zA-Z0-9!@#$%^&]*$/;
-    if (password.value.match(regex) && password.value.length >= 6) {
+    if (password.value.match(regex) && password.value.length >= 6 && password.value.length <= 30) {
         let countArray = {}, letterAmount = 0, result = 0;
         for (let letter of password.value.split('')) {
             countArray[letter] ? countArray[letter]++ : countArray[letter] = 1;
@@ -108,7 +108,7 @@ function passwordNotification(code) {
     child.setAttribute("id", "passwordComplex");
     switch (code) {
         case 3:
-            child.innerHTML = "Hasło nie spełnia wymogów - co najmniej 6 znaków ze zbioru [a-zA-Z0-9!@#$%^&]";
+            child.innerHTML = "Hasło nie spełnia wymogów - co najmniej 6, a co najwyżej 30 znaków ze zbioru [a-zA-Z0-9!@#$%^&]";
             document.getElementById("password").style.background = "red";
             break;
         case 2:
