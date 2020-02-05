@@ -6,6 +6,8 @@ Simple application built for „Programming web and mobile applications”.
 
 - Python 3.7
 - Flask
+- Javascript
+- HTML5
 - Docker-compose
 - Redis
 
@@ -14,7 +16,7 @@ Simple application built for „Programming web and mobile applications”.
 Application is used to publish, edit, share and delete publications and files. Project consists of 3 independent modules:
 
 - web - web client module (receives user’s actions and makes requests to cdn module)
-- cdn - REST module (receives requests from web, collects data from database and makes responses to web)
+- cdn - REST API module (receives requests from web, collects data from database and makes responses to web)
 - database (stores data about users and their publications)
 
 # Security
@@ -32,3 +34,10 @@ The main goal was to develop as safe application as possible. To achieve this, i
 To run it, just go to the main directory and type:
 
     docker-compose -f docker-compose.yml up --build
+    
+Then, edit your etc/hosts and add:
+    
+    127.0.0.1 web.company.com
+    127.0.0.1 cdn.company.com
+    
+After that, open your browser and move to "web.company.com".
